@@ -200,3 +200,23 @@ class TodoOrchestrator:
         
         # Return the version (convert to 0-indexed)
         return chronological[version_number - 1]
+
+    def duplicate_task(self, task_id: UUID) -> Optional[Task]:
+        """
+        Duplicates an existing task, creating a new task with the same
+        description, deadline, and attachments, but with a new UUID and
+        status reset to "pending".
+        """
+        source_task = self.get_task(task_id)
+        if not source_task:
+            return None
+        
+        # Create new task with copied properties
+        new_task = Task(
+            description=source_task.description,
+            deadline=source_task.deadline,
+            attachments=source_task.attachments.copy(),
+            status="pending"
+        )
+        
+        return self._commit_task(new_task)

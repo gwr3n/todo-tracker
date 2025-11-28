@@ -85,3 +85,29 @@ def test_get_task_version(orchestrator):
     # Out of bounds
     assert orchestrator.get_task_version(task.id, 0) is None
     assert orchestrator.get_task_version(task.id, 4) is None
+
+def test_duplicate_task(orchestrator, tmp_path):
+    # Create task with attachments
+    task = orchestrator.add_task(description="Original Task", deadline=None)
+    
+    # Add attachment
+    test_file = tmp_path / "test.txt"
+    test_file.write_text("content")
+    orchestrator.add_attachment(task.id, str(test_file))
+    
+    # Update status
+    orchestrator.update_task(task.id, status="completed")
+    
+    # Get current task
+    current = orchestrator.get_task(task.id)
+    
+    # Duplicate
+    duplicate = orchestrator.duplicate_task(task.id)
+    
+    assert duplicate is not None
+    assert duplicate.id != task.id  # Different UUID
+    assert duplicate.description == "Original Task"
+    assert duplicate.status == "pending"  # Reset status
+    assert len(duplicate.attachments) == 1
+    assert duplicate.attachments[0].filename == "test.txt"
+    assert duplicate.attachments[0].content_hash == current.attachments[0].content_hash

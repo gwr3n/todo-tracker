@@ -94,9 +94,14 @@ def main():
     extract_parser.add_argument("filename", help="Attachment filename")
     extract_parser.add_argument("--output", required=True, help="Output path")
 
+    # DUPLICATE
+    duplicate_parser = subparsers.add_parser("duplicate", help="Duplicate a task")
+    duplicate_parser.add_argument("id", help="Task UUID or Alias")
+
     # HISTORY
     history_parser = subparsers.add_parser("history", help="Show task history")
     history_parser.add_argument("id", help="Task UUID")
+
 
 
     args = parser.parse_args()
@@ -187,6 +192,24 @@ def main():
                 print(f"Attachment '{args.filename}' extracted to '{args.output}'")
             else:
                 print("Failed to extract attachment. Check task ID and filename.")
+        except ValueError:
+            print("Invalid UUID or Alias")
+
+    elif args.command == "duplicate":
+        try:
+            task = get_task_id(orch, args.id, allow_version=True)
+            if not task:
+                print("Task not found.")
+                return
+            
+            new_task = orch.duplicate_task(task.id)
+            if new_task:
+                new_alias = generate_alias(new_task.id)
+                print(f"Task duplicated successfully!")
+                print(f"New task: {new_task.id} ({new_alias})")
+                print(format_task(new_task, full=True))
+            else:
+                print("Failed to duplicate task.")
         except ValueError:
             print("Invalid UUID or Alias")
 
