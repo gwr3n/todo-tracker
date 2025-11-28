@@ -19,7 +19,11 @@ def format_task(task, full=False):
     alias = generate_alias(task.id)
     if not full:
         task_id = f"{task.id} ({alias})"
-        return f"{task_id:<50} | {task.status.ljust(10)} | {task.description}"
+
+        if task.attachments:
+            return f"{task_id:<53} @ | {task.status.ljust(10)} | {task.description}"
+        else: 
+            return f"{task_id:<55} | {task.status.ljust(10)} | {task.description}"
     
     lines = [
         f"ID:          {task.id} ({alias})",
@@ -60,6 +64,61 @@ def get_task_id(orch, id_str, allow_version=False):
                 return orch.get_task(uuid)
         raise ValueError("Invalid UUID or Alias")
 
+def render_kanban_board(tasks_by_status, statuses):
+    """Renders tasks in a kanban board layout with ASCII box-drawing characters."""
+    COL_WIDTH = 22
+    
+    # Prepare columns
+    columns = []
+    for status in statuses:
+        tasks = tasks_by_status.get(status, [])
+        col_data = []
+        for task in tasks:
+            alias = generate_alias(task.id)
+            # Truncate description
+            desc = task.description[:COL_WIDTH-2] if len(task.description) > COL_WIDTH-2 else task.description
+            col_data.append(f"{desc}")
+            col_data.append(f"({alias})")
+            col_data.append("")  # Spacing
+        columns.append(col_data)
+    
+    # Find max rows
+    max_rows = max(len(col) for col in columns) if columns else 0
+    
+    # Pad columns to same height
+    for col in columns:
+        while len(col) < max_rows:
+            col.append("")
+    
+    # Build output
+    output = []
+    
+    # Top border
+    top = "┌" + "┬".join(["─" * COL_WIDTH for _ in statuses]) + "┐"
+    output.append(top)
+    
+    # Headers
+    header_cells = [status.upper().center(COL_WIDTH)[:COL_WIDTH] for status in statuses]
+    output.append("│" + "│".join(header_cells) + "│")
+    
+    # Header separator
+    sep = "├" + "┼".join(["─" * COL_WIDTH for _ in statuses]) + "┤"
+    output.append(sep)
+    
+    # Rows
+    for row_idx in range(max_rows):
+        row_cells = []
+        for col in columns:
+            cell = col[row_idx] if row_idx < len(col) else ""
+            row_cells.append(cell.ljust(COL_WIDTH)[:COL_WIDTH])
+        output.append("│" + "│".join(row_cells) + "│")
+    
+    # Bottom border
+    bottom = "└" + "┴".join(["─" * COL_WIDTH for _ in statuses]) + "┘"
+    output.append(bottom)
+    
+    return "\n".join(output)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Todo Orchestrator CLI")
@@ -98,9 +157,14 @@ def main():
     duplicate_parser = subparsers.add_parser("duplicate", help="Duplicate a task")
     duplicate_parser.add_argument("id", help="Task UUID or Alias")
 
+    # KANBAN
+    kanban_parser = subparsers.add_parser("kanban", help="Display kanban board")
+    kanban_parser.add_argument("statuses", nargs="+", help="Status values to display as columns")
+
     # HISTORY
     history_parser = subparsers.add_parser("history", help="Show task history")
     history_parser.add_argument("id", help="Task UUID")
+
 
 
 
@@ -124,8 +188,8 @@ def main():
         if not orch.tasks:
             print("No tasks found.")
         else:
-            print(f"{'ID (ALIAS)':<50} | {'STATUS':<10} | DESCRIPTION")
-            print("-" * 80)
+            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | DESCRIPTION")
+            print("-" * 100)
             for task in orch.tasks.values():
                 print(format_task(task))
 
@@ -212,6 +276,24 @@ def main():
                 print("Failed to duplicate task.")
         except ValueError:
             print("Invalid UUID or Alias")
+
+    elif args.command == "kanban":
+        # Group tasks by status (case-insensitive)
+        status_map = {}
+        for status in args.statuses:
+            status_map[status.lower()] = status
+        
+        tasks_by_status = {status: [] for status in args.statuses}
+        
+        for task in orch.tasks.values():
+            task_status_lower = task.status.lower()
+            if task_status_lower in status_map:
+                original_status = status_map[task_status_lower]
+                tasks_by_status[original_status].append(task)
+        
+        # Render and display
+        board = render_kanban_board(tasks_by_status, args.statuses)
+        print(board)
 
     elif args.command == "history":
         try:
