@@ -165,6 +165,10 @@ def main():
     archive_parser = subparsers.add_parser("archive", help="Archive a task")
     archive_parser.add_argument("id", help="Task UUID or Alias")
 
+    # UNARCHIVE
+    unarchive_parser = subparsers.add_parser("unarchive", help="Unarchive a task")
+    unarchive_parser.add_argument("id", help="Task UUID or Alias")
+
     # DELETE
     delete_parser = subparsers.add_parser("delete", help="Delete a task")
     delete_parser.add_argument("id", help="Task UUID or Alias")
@@ -296,6 +300,8 @@ def main():
         tasks_by_status = {status: [] for status in args.statuses}
         
         for task in orch.tasks.values():
+            if task.archived:
+                continue
             task_status_lower = task.status.lower()
             if task_status_lower in status_map:
                 original_status = status_map[task_status_lower]
@@ -317,6 +323,21 @@ def main():
                 print(f"Task {task.id} archived.")
             else:
                 print("Failed to archive task.")
+        except ValueError:
+            print("Invalid UUID or Alias")
+
+    elif args.command == "unarchive":
+        try:
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
+            updated_task = orch.unarchive_task(task.id)
+            if updated_task:
+                print(f"Task {task.id} unarchived.")
+            else:
+                print("Failed to unarchive task.")
         except ValueError:
             print("Invalid UUID or Alias")
 

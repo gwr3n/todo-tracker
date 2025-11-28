@@ -124,6 +124,18 @@ def test_archive_task(orchestrator):
     loaded = orchestrator.get_task(task.id)
     assert loaded.archived
 
+def test_unarchive_task(orchestrator):
+    task = orchestrator.add_task(description="Task to Unarchive")
+    orchestrator.archive_task(task.id)
+    assert orchestrator.get_task(task.id).archived
+    
+    updated = orchestrator.unarchive_task(task.id)
+    assert not updated.archived
+    
+    # Verify persistence
+    loaded = orchestrator.get_task(task.id)
+    assert not loaded.archived
+
 def test_delete_task(orchestrator):
     task = orchestrator.add_task(description="Task to Delete")
     
