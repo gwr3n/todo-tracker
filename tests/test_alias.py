@@ -32,11 +32,38 @@ def test_resolve_alias():
     candidates = [u1, u2]
     
     # Exact match
-    assert resolve_alias(a1, candidates) == u1
+    result = resolve_alias(a1, candidates)
+    assert result is not None
+    assert result[0] == u1
+    assert result[1] is None  # No version
     
     # Case insensitive
-    assert resolve_alias(a1.lower(), candidates) == u1
-    assert resolve_alias(a1.upper(), candidates) == u1
+    result = resolve_alias(a1.lower(), candidates)
+    assert result[0] == u1
+    
+    result = resolve_alias(a1.upper(), candidates)
+    assert result[0] == u1
     
     # Non-existent
     assert resolve_alias("Non-Existent", candidates) is None
+
+def test_resolve_alias_with_version():
+    u1 = UUID('3077bee6-3da3-4783-aff7-cbedfd5f5592')
+    a1 = generate_alias(u1)
+    candidates = [u1]
+    
+    # Version 1
+    result = resolve_alias(f"{a1}-1", candidates)
+    assert result is not None
+    assert result[0] == u1
+    assert result[1] == 1
+    
+    # Version 5
+    result = resolve_alias(f"{a1}-5", candidates)
+    assert result[0] == u1
+    assert result[1] == 5
+    
+    # Case insensitive with version
+    result = resolve_alias(f"{a1.lower()}-3", candidates)
+    assert result[0] == u1
+    assert result[1] == 3

@@ -36,16 +36,30 @@ def format_task(task, full=False):
     
     return "\n".join(lines)
 
-def get_task_id(orch, id_str):
+def get_task_id(orch, id_str, allow_version=False):
+    """
+    Resolves an ID string to a Task object.
+    If allow_version=True, supports versioned aliases like "Misty-Rat-2".
+    Returns a Task object (either current or historical version).
+    """
     try:
-        return UUID(id_str)
+        # Try parsing as UUID
+        task_id = UUID(id_str)
+        return orch.get_task(task_id)
     except ValueError:
         # Try as alias
         candidates = list(orch.tasks.keys())
         resolved = resolve_alias(id_str, candidates)
         if resolved:
-            return resolved
+            uuid, version = resolved
+            if version is not None and allow_version:
+                # Get specific version
+                return orch.get_task_version(uuid, version)
+            else:
+                # Get current version
+                return orch.get_task(uuid)
         raise ValueError("Invalid UUID or Alias")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Todo Orchestrator CLI")
@@ -112,15 +126,21 @@ def main():
 
     elif args.command == "show":
         try:
-            task_id = get_task_id(orch, args.id)
-            task = orch.get_task(task_id)
-            print(format_task(task, full=True))
+            task = get_task_id(orch, args.id, allow_version=True)
+            if task:
+                print(format_task(task, full=True))
+            else:
+                print("Task not found.")
         except ValueError:
-            print("Invalid UUID")
+            print("Invalid UUID or Alias")
 
     elif args.command == "update":
         try:
-            task_id = get_task_id(orch, args.id)
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
             updates = {}
             if args.desc:
                 updates['description'] = args.desc
@@ -128,33 +148,41 @@ def main():
                 updates['status'] = args.status
             
             if updates:
-                task = orch.update_task(task_id, **updates)
-                if task:
+                updated_task = orch.update_task(task.id, **updates)
+                if updated_task:
                     print("Task updated.")
-                    print(format_task(task, full=True))
+                    print(format_task(updated_task, full=True))
                 else:
                     print("Task not found.")
             else:
                 print("No updates provided.")
         except ValueError:
-            print("Invalid UUID")
+            print("Invalid UUID or Alias")
 
     elif args.command == "attach":
         try:
-            task_id = get_task_id(orch, args.id)
-            task = orch.add_attachment(task_id, args.filepath)
-            if task:
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
+            updated_task = orch.add_attachment(task.id, args.filepath)
+            if updated_task:
                 print("Attachment added.")
-                print(format_task(task, full=True))
+                print(format_task(updated_task, full=True))
             else:
                 print("Task not found or file error.")
         except ValueError:
-            print("Invalid UUID")
+            print("Invalid UUID or Alias")
 
     elif args.command == "extract":
         try:
-            task_id = get_task_id(orch, args.id)
-            success = orch.extract_attachment(task_id, args.filename, args.output)
+            task = get_task_id(orch, args.id, allow_version=True)
+            if not task:
+                print("Task not found.")
+                return
+            
+            success = orch.extract_attachment(task.id, args.filename, args.output)
             if success:
                 print(f"Attachment '{args.filename}' extracted to '{args.output}'")
             else:
@@ -164,17 +192,21 @@ def main():
 
     elif args.command == "history":
         try:
-            task_id = get_task_id(orch, args.id)
-            history = orch.get_history(task_id)
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
+            history = orch.get_history(task.id)
             if not history:
                 print("Task not found.")
             else:
-                for i, task in enumerate(history):
+                for i, task_version in enumerate(history):
                     print(f"--- Version {len(history) - i} ---")
-                    print(format_task(task, full=True))
+                    print(format_task(task_version, full=True))
                     print("")
         except ValueError:
-            print("Invalid UUID")
+            print("Invalid UUID or Alias")
 
     else:
         parser.print_help()

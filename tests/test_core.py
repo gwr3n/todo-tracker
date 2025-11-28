@@ -65,3 +65,23 @@ def test_orchestrator_extract_attachment(orchestrator, tmp_path):
     assert success is True
     assert extracted_file.exists()
     assert extracted_file.read_text() == original_content
+
+def test_get_task_version(orchestrator):
+    task = orchestrator.add_task(description="Version 1")
+    
+    # Update twice
+    orchestrator.update_task(task.id, description="Version 2")
+    orchestrator.update_task(task.id, description="Version 3")
+    
+    # Get specific versions
+    v1 = orchestrator.get_task_version(task.id, 1)
+    v2 = orchestrator.get_task_version(task.id, 2)
+    v3 = orchestrator.get_task_version(task.id, 3)
+    
+    assert v1.description == "Version 1"
+    assert v2.description == "Version 2"
+    assert v3.description == "Version 3"
+    
+    # Out of bounds
+    assert orchestrator.get_task_version(task.id, 0) is None
+    assert orchestrator.get_task_version(task.id, 4) is None

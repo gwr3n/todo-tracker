@@ -181,3 +181,22 @@ class TodoOrchestrator:
             return True
         except Exception:
             return False
+
+    def get_task_version(self, task_id: UUID, version_number: int) -> Optional[Task]:
+        """
+        Returns a specific version of a task by version number.
+        Version 1 is the oldest (first created), incrementing to the newest.
+        """
+        history = self.get_history(task_id)
+        if not history:
+            return None
+        
+        # history is newest-first, so reverse it for chronological order
+        chronological = list(reversed(history))
+        
+        # Check bounds (1-indexed)
+        if version_number < 1 or version_number > len(chronological):
+            return None
+        
+        # Return the version (convert to 0-indexed)
+        return chronological[version_number - 1]

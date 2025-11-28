@@ -33,16 +33,26 @@ def generate_alias(uuid_obj: UUID) -> str:
     
     return f"{ADJECTIVES[adj_idx]}-{NOUNS[noun_idx]}"
 
-def resolve_alias(alias: str, candidates: List[UUID]) -> Optional[UUID]:
+def resolve_alias(alias: str, candidates: List[UUID]) -> Optional[tuple]:
     """
     Finds the UUID that corresponds to the given alias from a list of candidates.
-    Returns the first match found.
+    Returns a tuple (UUID, version_number) where version_number is None for current version,
+    or an integer for a specific historical version (e.g., "Misty-Rat-2" -> (uuid, 2)).
     """
     # Normalize alias (case-insensitive)
     target = alias.lower()
     
+    # Check for version suffix (e.g., "Misty-Rat-2")
+    version_number = None
+    if target[-1].isdigit():
+        # Find the last dash before the number
+        parts = target.rsplit('-', 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            target = parts[0]
+            version_number = int(parts[1])
+    
     for cand in candidates:
         if generate_alias(cand).lower() == target:
-            return cand
+            return (cand, version_number)
             
     return None
