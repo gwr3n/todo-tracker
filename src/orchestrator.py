@@ -107,6 +107,10 @@ class TodoOrchestrator:
             return True
         return False
 
+    def archive_task(self, task_id: UUID) -> Optional[Task]:
+        """Archives a task by setting its archived flag to True."""
+        return self.update_task(task_id, archived=True)
+
     def add_attachment(self, task_id: UUID, file_path: str) -> Optional[Task]:
         """Reads a file, stores it as a blob, and adds it to the task."""
         task = self.get_task(task_id)

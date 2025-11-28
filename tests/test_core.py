@@ -111,3 +111,28 @@ def test_duplicate_task(orchestrator, tmp_path):
     assert len(duplicate.attachments) == 1
     assert duplicate.attachments[0].filename == "test.txt"
     assert duplicate.attachments[0].content_hash == current.attachments[0].content_hash
+
+def test_archive_task(orchestrator):
+    task = orchestrator.add_task(description="Task to Archive")
+    assert not task.archived
+    
+    updated = orchestrator.archive_task(task.id)
+    assert updated.archived
+    assert updated.id == task.id
+    
+    # Verify persistence
+    loaded = orchestrator.get_task(task.id)
+    assert loaded.archived
+
+def test_delete_task(orchestrator):
+    task = orchestrator.add_task(description="Task to Delete")
+    
+    # Delete
+    success = orchestrator.delete_task(task.id)
+    assert success
+    
+    # Verify gone
+    assert orchestrator.get_task(task.id) is None
+    
+    # Delete non-existent
+    assert not orchestrator.delete_task(task.id)

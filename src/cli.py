@@ -130,7 +130,8 @@ def main():
     add_parser.add_argument("--deadline", help="Deadline (YYYY-MM-DD)")
 
     # LIST
-    subparsers.add_parser("list", help="List all tasks")
+    list_parser = subparsers.add_parser("list", help="List all tasks")
+    list_parser.add_argument("-a", "--all", action="store_true", help="Show all tasks including archived")
 
     # SHOW
     show_parser = subparsers.add_parser("show", help="Show task details")
@@ -157,9 +158,16 @@ def main():
     duplicate_parser = subparsers.add_parser("duplicate", help="Duplicate a task")
     duplicate_parser.add_argument("id", help="Task UUID or Alias")
 
-    # KANBAN
     kanban_parser = subparsers.add_parser("kanban", help="Display kanban board")
     kanban_parser.add_argument("statuses", nargs="+", help="Status values to display as columns")
+
+    # ARCHIVE
+    archive_parser = subparsers.add_parser("archive", help="Archive a task")
+    archive_parser.add_argument("id", help="Task UUID or Alias")
+
+    # DELETE
+    delete_parser = subparsers.add_parser("delete", help="Delete a task")
+    delete_parser.add_argument("id", help="Task UUID or Alias")
 
     # HISTORY
     history_parser = subparsers.add_parser("history", help="Show task history")
@@ -188,9 +196,11 @@ def main():
         if not orch.tasks:
             print("No tasks found.")
         else:
-            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | DESCRIPTION")
+            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | {'ATTACHMENTS':<20} | DESCRIPTION")
             print("-" * 100)
             for task in orch.tasks.values():
+                if not args.all and task.archived:
+                    continue
                 print(format_task(task))
 
     elif args.command == "show":
@@ -294,6 +304,36 @@ def main():
         # Render and display
         board = render_kanban_board(tasks_by_status, args.statuses)
         print(board)
+
+    elif args.command == "archive":
+        try:
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
+            updated_task = orch.archive_task(task.id)
+            if updated_task:
+                print(f"Task {task.id} archived.")
+            else:
+                print("Failed to archive task.")
+        except ValueError:
+            print("Invalid UUID or Alias")
+
+    elif args.command == "delete":
+        try:
+            task = get_task_id(orch, args.id)
+            if not task:
+                print("Task not found.")
+                return
+            
+            success = orch.delete_task(task.id)
+            if success:
+                print(f"Task {task.id} deleted.")
+            else:
+                print("Failed to delete task.")
+        except ValueError:
+            print("Invalid UUID or Alias")
 
     elif args.command == "history":
         try:
