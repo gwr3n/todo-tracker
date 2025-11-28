@@ -18,12 +18,12 @@ def format_task(task, full=False):
     
     alias = generate_alias(task.id)
     if not full:
-        task_id = f"{task.id} ({alias})"
+        task_id = f"{str(task.id)[:6]} ({alias})"
 
         if task.attachments:
-            return f"{task_id:<53} @ | {task.status.ljust(10)} | {task.description}"
+            return f"{task_id:<20} @ | {task.status.ljust(10)} | {task.description}"
         else: 
-            return f"{task_id:<55} | {task.status.ljust(10)} | {task.description}"
+            return f"{task_id:<20} | {task.status.ljust(10)} | {task.description}"
     
     lines = [
         f"ID:          {task.id} ({alias})",
@@ -200,7 +200,7 @@ def main():
         if not orch.tasks:
             print("No tasks found.")
         else:
-            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | DESCRIPTION")
+            print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | DESCRIPTION")
             print("-" * 100)
             for task in orch.tasks.values():
                 if not args.all and task.archived:
