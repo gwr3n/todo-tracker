@@ -200,7 +200,7 @@ def main():
         if not orch.tasks:
             print("No tasks found.")
         else:
-            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | {'ATTACHMENTS':<20} | DESCRIPTION")
+            print(f"{'ID (ALIAS)':<55} | {'STATUS':<10} | DESCRIPTION")
             print("-" * 100)
             for task in orch.tasks.values():
                 if not args.all and task.archived:
