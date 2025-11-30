@@ -4,3 +4,4 @@ __pycache__
 venv
 todo_orchestrator.egg-info
 dist
+.DS_Store
