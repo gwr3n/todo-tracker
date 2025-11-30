@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+import json
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
@@ -176,6 +177,11 @@ def main():
     # DELETE
     delete_parser = subparsers.add_parser("delete", help="Delete a task")
     delete_parser.add_argument("id", help="Task UUID or Alias")
+
+    # DUMP
+    dump_parser = subparsers.add_parser("dump", help="Dump tasks to JSON")
+    dump_parser.add_argument("-a", "--all", action="store_true", help="Include archived tasks")
+    dump_parser.add_argument("--output", help="Output file path")
 
     # HISTORY
     history_parser = subparsers.add_parser("history", help="Show task history")
@@ -359,6 +365,25 @@ def main():
                 print("Failed to delete task.")
         except ValueError:
             print("Invalid UUID or Alias")
+
+    elif args.command == "dump":
+        tasks_to_dump = []
+        for task in orch.tasks.values():
+            if not args.all and task.archived:
+                continue
+            tasks_to_dump.append(task.model_dump(mode='json'))
+        
+        json_output = json.dumps(tasks_to_dump, indent=2, default=str)
+        
+        if args.output:
+            try:
+                with open(args.output, 'w') as f:
+                    f.write(json_output)
+                print(f"Dumped {len(tasks_to_dump)} tasks to {args.output}")
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+        else:
+            print(json_output)
 
     elif args.command == "history":
         try:
