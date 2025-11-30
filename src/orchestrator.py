@@ -89,6 +89,7 @@ class TodoOrchestrator:
              pass 
 
         updated_data.parent = current_task.version_hash
+        updated_data.modified_at = datetime.now()
         
         # Commit new version
         return self._commit_task(updated_data)

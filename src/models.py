@@ -16,5 +16,6 @@ class Task(BaseModel):
     status: str = "pending"
     archived: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
+    modified_at: datetime = Field(default_factory=datetime.now)
     parent: Optional[str] = None  # Hash of the previous version
     version_hash: Optional[str] = None  # Hash of this version's content

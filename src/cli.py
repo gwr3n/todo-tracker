@@ -30,6 +30,7 @@ def format_task(task, full=False):
         f"Description: {task.description}",
         f"Status:      {task.status}",
         f"Created:     {task.created_at}",
+        f"Modified:    {task.modified_at}",
         f"Deadline:    {task.deadline}",
         f"Version:     {task.version_hash}",
         f"Parent:      {task.parent}",
