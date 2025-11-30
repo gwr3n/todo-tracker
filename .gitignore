@@ -1,3 +1,5 @@
 .todo_store
 .pytest_cache
 __pycache__
+venv
+todo_orchestrator.egg-info
