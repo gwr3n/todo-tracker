@@ -20,10 +20,13 @@ def format_task(task, full=False):
     if not full:
         task_id = f"{str(task.id)[:6]} ({alias})"
 
+        # Format modified_at timestamp (just date and time, no microseconds)
+        modified_str = task.modified_at.strftime("%Y-%m-%d %H:%M")
+        
         if task.attachments:
-            return f"{task_id:<20} @ | {task.status.ljust(10)} | {task.description}"
+            return f"{task_id:<20} @ | {task.status.ljust(10)} | {modified_str:<16} | {task.description.splitlines()[0]:<22}"
         else: 
-            return f"{task_id:<20} | {task.status.ljust(10)} | {task.description}"
+            return f"{task_id:<22} | {task.status.ljust(10)} | {modified_str:<16} | {task.description.splitlines()[0]:<22}"
     
     lines = [
         f"ID:          {task.id} ({alias})",
@@ -201,8 +204,8 @@ def main():
         if not orch.tasks:
             print("No tasks found.")
         else:
-            print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | DESCRIPTION")
-            print("-" * 100)
+            print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | {'MODIFIED':<16} | DESCRIPTION")
+            print("-" * 120)
             for task in orch.tasks.values():
                 if not args.all and task.archived:
                     continue
