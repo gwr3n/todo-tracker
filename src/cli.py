@@ -36,7 +36,7 @@ def format_task(task, full=False):
         f"Created:     {task.created_at}",
         f"Modified:    {task.modified_at}",
         f"Deadline:    {task.deadline}",
-        f"Version:     {task.version_hash}",
+        f"ID (hash):   {task.version_hash}",
         f"Parent:      {task.parent}",
         "Attachments:"
     ]
@@ -181,6 +181,7 @@ def main():
     # DUMP
     dump_parser = subparsers.add_parser("dump", help="Dump tasks to JSON")
     dump_parser.add_argument("-a", "--all", action="store_true", help="Include archived tasks")
+    dump_parser.add_argument("--history", action="store_true", help="Include all versions of tasks")
     dump_parser.add_argument("--output", help="Output file path")
 
     # HISTORY
@@ -371,7 +372,13 @@ def main():
         for task in orch.tasks.values():
             if not args.all and task.archived:
                 continue
-            tasks_to_dump.append(task.model_dump(mode='json'))
+            
+            if args.history:
+                history = orch.get_history(task.id)
+                for version in history:
+                    tasks_to_dump.append(version.model_dump(mode='json'))
+            else:
+                tasks_to_dump.append(task.model_dump(mode='json'))
         
         json_output = json.dumps(tasks_to_dump, indent=2, default=str)
         

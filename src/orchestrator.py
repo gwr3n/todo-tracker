@@ -95,10 +95,31 @@ class TodoOrchestrator:
         return self._commit_task(updated_data)
 
     def delete_task(self, task_id: UUID) -> bool:
-        # In a Git-like system, do we delete? Or just stop referencing?
-        # For now, let's remove the ref and the in-memory object.
-        # The objects remain (garbage collection would be a separate feature).
+        """
+        Deletes a task and its attachments.
+        
+        Attachments are only deleted from storage if they are not referenced
+        by any other task (e.g. via duplication).
+        """
         if task_id in self.tasks:
+            task_to_delete = self.tasks[task_id]
+            
+            # Identify attachments to delete
+            attachments_to_check = {att.content_hash for att in task_to_delete.attachments}
+            
+            # Find attachments in use by OTHER tasks
+            in_use_hashes = set()
+            for tid, t in self.tasks.items():
+                if tid == task_id:
+                    continue
+                for att in t.attachments:
+                    in_use_hashes.add(att.content_hash)
+            
+            # Delete unused attachments
+            for content_hash in attachments_to_check:
+                if content_hash not in in_use_hashes:
+                    self.storage.delete_object(content_hash)
+
             del self.tasks[task_id]
             # Remove ref file
             import os

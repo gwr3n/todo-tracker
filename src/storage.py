@@ -66,3 +66,11 @@ class ObjectStore:
             with open(path, "r") as f:
                 return f.read().strip()
         return None
+
+    def delete_object(self, content_hash: str) -> bool:
+        """Deletes an object by hash. Returns True if deleted, False if not found."""
+        path = os.path.join(self.objects_dir, content_hash)
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+        return False

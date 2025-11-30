@@ -136,6 +136,52 @@ def test_unarchive_task(orchestrator):
     loaded = orchestrator.get_task(task.id)
     assert not loaded.archived
 
+def test_delete_task_with_attachments(orchestrator, tmp_path):
+    # Create task with attachment
+    test_file = tmp_path / "delete_test.txt"
+    test_file.write_text("content to delete")
+    
+    task = orchestrator.add_task(description="Task with attachment")
+    orchestrator.add_attachment(task.id, str(test_file))
+    
+    # Get content hash
+    task = orchestrator.get_task(task.id)
+    content_hash = task.attachments[0].content_hash
+    
+    # Verify blob exists
+    assert orchestrator.storage.get_object(content_hash) is not None
+    
+    # Delete task
+    orchestrator.delete_task(task.id)
+    
+    # Verify blob is gone
+    assert orchestrator.storage.get_object(content_hash) is None
+
+def test_delete_task_shared_attachment(orchestrator, tmp_path):
+    # Create task A with attachment
+    test_file = tmp_path / "shared.txt"
+    test_file.write_text("shared content")
+    
+    task_a = orchestrator.add_task(description="Task A")
+    task_a = orchestrator.add_attachment(task_a.id, str(test_file))
+    
+    # Duplicate to Task B
+    task_b = orchestrator.duplicate_task(task_a.id)
+    
+    content_hash = task_a.attachments[0].content_hash
+    
+    # Delete Task A
+    orchestrator.delete_task(task_a.id)
+    
+    # Verify blob still exists (used by B)
+    assert orchestrator.storage.get_object(content_hash) is not None
+    
+    # Delete Task B
+    orchestrator.delete_task(task_b.id)
+    
+    # Verify blob is gone
+    assert orchestrator.storage.get_object(content_hash) is None
+
 def test_delete_task(orchestrator):
     task = orchestrator.add_task(description="Task to Delete")
     

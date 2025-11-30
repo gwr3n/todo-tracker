@@ -72,3 +72,21 @@ def test_dump_output_file(mock_orch, tmp_path):
             data = json.load(f)
             assert len(data) == 1
             assert data[0]['description'] == "Task 1"
+
+def test_dump_history(mock_orch, capsys):
+    from src.models import Task
+    
+    t1_v2 = Task(description="Task 1 v2")
+    t1_v1 = Task(description="Task 1 v1")
+    
+    mock_orch.tasks = {t1_v2.id: t1_v2}
+    mock_orch.get_history.return_value = [t1_v2, t1_v1]
+    
+    with patch('sys.argv', ['cli.py', 'dump', '--history']):
+        main()
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert len(data) == 2
+        descriptions = {d['description'] for d in data}
+        assert "Task 1 v2" in descriptions
+        assert "Task 1 v1" in descriptions
