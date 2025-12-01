@@ -3,11 +3,21 @@ from uuid import UUID
 from datetime import datetime
 from .models import Task, Attachment
 from .storage import ObjectStore
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TodoOrchestrator:
     def __init__(self, root_dir: str = ".todo_store"):
         self.storage = ObjectStore(root_dir=root_dir)
         self.tasks: Dict[UUID, Task] = {}
+        
+        # Initialize lock
+        from .lock import FileLock
+        import os
+        lock_path = os.path.join(root_dir, "orchestrator.lock")
+        self.lock = FileLock(lock_path)
+        
         self._load_state()
 
     def _load_state(self):
@@ -29,6 +39,7 @@ class TodoOrchestrator:
                             task.version_hash = head_hash
                             self.tasks[task_id] = task
                 except ValueError:
+                    logger.warning(f"Skipping invalid task file: {filename}")
                     continue
 
     def _commit_task(self, task: Task) -> Task:
@@ -53,46 +64,48 @@ class TodoOrchestrator:
         return task
 
     def add_task(self, description: str, deadline=None, attachments=None) -> Task:
-        # Process attachments if provided (assuming they are already Attachment objects or similar)
-        # For this method, let's assume attachments is a list of Attachment objects
-        # But wait, Attachment objects now need content_hash, not location.
-        # The user interface for this might need to change, but let's stick to the signature.
-        
-        real_attachments = []
-        if attachments:
-            for att in attachments:
-                if isinstance(att, Attachment):
-                    real_attachments.append(att)
-        
-        task = Task(
-            description=description, 
-            deadline=deadline, 
-            attachments=real_attachments
-        )
-        return self._commit_task(task)
+        with self.lock.acquire():
+            # Process attachments if provided (assuming they are already Attachment objects or similar)
+            # For this method, let's assume attachments is a list of Attachment objects
+            # But wait, Attachment objects now need content_hash, not location.
+            # The user interface for this might need to change, but let's stick to the signature.
+            
+            real_attachments = []
+            if attachments:
+                for att in attachments:
+                    if isinstance(att, Attachment):
+                        real_attachments.append(att)
+            
+            task = Task(
+                description=description, 
+                deadline=deadline, 
+                attachments=real_attachments
+            )
+            return self._commit_task(task)
 
     def get_task(self, task_id: UUID) -> Optional[Task]:
         return self.tasks.get(task_id)
 
     def update_task(self, task_id: UUID, **updates) -> Optional[Task]:
-        current_task = self.get_task(task_id)
-        if not current_task:
-            return None
-        
-        # Create new task version
-        updated_data = current_task.model_copy(update=updates)
-        
-        # Set parent to the hash of the PREVIOUS version (which is current_task.version_hash)
-        # Ensure current_task has a version_hash. If it was just loaded, it should.
-        if not current_task.version_hash:
-             # Fallback: calculate it if missing (shouldn't happen if loaded correctly)
-             pass 
+        with self.lock.acquire():
+            current_task = self.get_task(task_id)
+            if not current_task:
+                return None
+            
+            # Create new task version
+            updated_data = current_task.model_copy(update=updates)
+            
+            # Set parent to the hash of the PREVIOUS version (which is current_task.version_hash)
+            # Ensure current_task has a version_hash. If it was just loaded, it should.
+            if not current_task.version_hash:
+                 # Fallback: calculate it if missing (shouldn't happen if loaded correctly)
+                 pass 
 
-        updated_data.parent = current_task.version_hash
-        updated_data.modified_at = datetime.now()
-        
-        # Commit new version
-        return self._commit_task(updated_data)
+            updated_data.parent = current_task.version_hash
+            updated_data.modified_at = datetime.now()
+            
+            # Commit new version
+            return self._commit_task(updated_data)
 
     def delete_task(self, task_id: UUID) -> bool:
         """
@@ -101,33 +114,34 @@ class TodoOrchestrator:
         Attachments are only deleted from storage if they are not referenced
         by any other task (e.g. via duplication).
         """
-        if task_id in self.tasks:
-            task_to_delete = self.tasks[task_id]
-            
-            # Identify attachments to delete
-            attachments_to_check = {att.content_hash for att in task_to_delete.attachments}
-            
-            # Find attachments in use by OTHER tasks
-            in_use_hashes = set()
-            for tid, t in self.tasks.items():
-                if tid == task_id:
-                    continue
-                for att in t.attachments:
-                    in_use_hashes.add(att.content_hash)
-            
-            # Delete unused attachments
-            for content_hash in attachments_to_check:
-                if content_hash not in in_use_hashes:
-                    self.storage.delete_object(content_hash)
+        with self.lock.acquire():
+            if task_id in self.tasks:
+                task_to_delete = self.tasks[task_id]
+                
+                # Identify attachments to delete
+                attachments_to_check = {att.content_hash for att in task_to_delete.attachments}
+                
+                # Find attachments in use by OTHER tasks
+                in_use_hashes = set()
+                for tid, t in self.tasks.items():
+                    if tid == task_id:
+                        continue
+                    for att in t.attachments:
+                        in_use_hashes.add(att.content_hash)
+                
+                # Delete unused attachments
+                for content_hash in attachments_to_check:
+                    if content_hash not in in_use_hashes:
+                        self.storage.delete_object(content_hash)
 
-            del self.tasks[task_id]
-            # Remove ref file
-            import os
-            ref_path = os.path.join(self.storage.refs_dir, str(task_id))
-            if os.path.exists(ref_path):
-                os.remove(ref_path)
-            return True
-        return False
+                del self.tasks[task_id]
+                # Remove ref file
+                import os
+                ref_path = os.path.join(self.storage.refs_dir, str(task_id))
+                if os.path.exists(ref_path):
+                    os.remove(ref_path)
+                return True
+            return False
 
     def archive_task(self, task_id: UUID) -> Optional[Task]:
         """Archives a task by setting its archived flag to True."""
@@ -237,16 +251,17 @@ class TodoOrchestrator:
         description, deadline, and attachments, but with a new UUID and
         status reset to "pending".
         """
-        source_task = self.get_task(task_id)
-        if not source_task:
-            return None
-        
-        # Create new task with copied properties
-        new_task = Task(
-            description=source_task.description,
-            deadline=source_task.deadline,
-            attachments=source_task.attachments.copy(),
-            status="pending"
-        )
-        
-        return self._commit_task(new_task)
+        with self.lock.acquire():
+            source_task = self.get_task(task_id)
+            if not source_task:
+                return None
+            
+            # Create new task with copied properties
+            new_task = Task(
+                description=source_task.description,
+                deadline=source_task.deadline,
+                attachments=source_task.attachments.copy(),
+                status="pending"
+            )
+            
+            return self._commit_task(new_task)

@@ -2,6 +2,7 @@
 import argparse
 import sys
 import json
+import logging
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
@@ -12,6 +13,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.orchestrator import TodoOrchestrator
 from src.alias import generate_alias, resolve_alias
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def format_task(task, full=False):
     if not task:
@@ -124,6 +132,222 @@ def render_kanban_board(tasks_by_status, statuses):
     
     return "\n".join(output)
 
+# --- Command Handlers ---
+
+def handle_add(orch, args):
+    deadline = None
+    if args.deadline:
+        try:
+            deadline = datetime.strptime(args.deadline, "%Y-%m-%d")
+        except ValueError:
+            print("Invalid date format. Use YYYY-MM-DD")
+            return
+
+    task = orch.add_task(args.description, deadline=deadline)
+    print(f"Task created: {task.id}")
+
+def handle_list(orch, args):
+    if not orch.tasks:
+        print("No tasks found.")
+    else:
+        print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | {'MODIFIED':<16} | DESCRIPTION")
+        print("-" * 120)
+        for task in orch.tasks.values():
+            if not args.all and task.archived:
+                continue
+            print(format_task(task))
+
+def handle_show(orch, args):
+    try:
+        task = get_task_id(orch, args.id, allow_version=True)
+        if task:
+            print(format_task(task, full=True))
+        else:
+            print("Task not found.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_update(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        updates = {}
+        if args.desc:
+            updates['description'] = args.desc
+        if args.status:
+            updates['status'] = args.status
+        
+        if updates:
+            updated_task = orch.update_task(task.id, **updates)
+            if updated_task:
+                print("Task updated.")
+                print(format_task(updated_task, full=True))
+            else:
+                print("Task not found.")
+        else:
+            print("No updates provided.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_attach(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        updated_task = orch.add_attachment(task.id, args.filepath)
+        if updated_task:
+            print("Attachment added.")
+            print(format_task(updated_task, full=True))
+        else:
+            print("Task not found or file error.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_extract(orch, args):
+    try:
+        task = get_task_id(orch, args.id, allow_version=True)
+        if not task:
+            print("Task not found.")
+            return
+        
+        success = orch.extract_attachment(task.id, args.filename, args.output)
+        if success:
+            print(f"Attachment '{args.filename}' extracted to '{args.output}'")
+        else:
+            print("Failed to extract attachment. Check task ID and filename.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_duplicate(orch, args):
+    try:
+        task = get_task_id(orch, args.id, allow_version=True)
+        if not task:
+            print("Task not found.")
+            return
+        
+        new_task = orch.duplicate_task(task.id)
+        if new_task:
+            new_alias = generate_alias(new_task.id)
+            print(f"Task duplicated successfully!")
+            print(f"New task: {new_task.id} ({new_alias})")
+            print(format_task(new_task, full=True))
+        else:
+            print("Failed to duplicate task.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_kanban(orch, args):
+    # Group tasks by status (case-insensitive)
+    status_map = {}
+    for status in args.statuses:
+        status_map[status.lower()] = status
+    
+    tasks_by_status = {status: [] for status in args.statuses}
+    
+    for task in orch.tasks.values():
+        if task.archived:
+            continue
+        task_status_lower = task.status.lower()
+        if task_status_lower in status_map:
+            original_status = status_map[task_status_lower]
+            tasks_by_status[original_status].append(task)
+    
+    # Render and display
+    board = render_kanban_board(tasks_by_status, args.statuses)
+    print(board)
+
+def handle_archive(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        updated_task = orch.archive_task(task.id)
+        if updated_task:
+            print(f"Task {task.id} archived.")
+        else:
+            print("Failed to archive task.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_unarchive(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        updated_task = orch.unarchive_task(task.id)
+        if updated_task:
+            print(f"Task {task.id} unarchived.")
+        else:
+            print("Failed to unarchive task.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_delete(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        success = orch.delete_task(task.id)
+        if success:
+            print(f"Task {task.id} deleted.")
+        else:
+            print("Failed to delete task.")
+    except ValueError:
+        print("Invalid UUID or Alias")
+
+def handle_dump(orch, args):
+    tasks_to_dump = []
+    for task in orch.tasks.values():
+        if not args.all and task.archived:
+            continue
+        
+        if args.history:
+            history = orch.get_history(task.id)
+            for version in history:
+                tasks_to_dump.append(version.model_dump(mode='json'))
+        else:
+            tasks_to_dump.append(task.model_dump(mode='json'))
+    
+    json_output = json.dumps(tasks_to_dump, indent=2, default=str)
+    
+    if args.output:
+        try:
+            with open(args.output, 'w') as f:
+                f.write(json_output)
+            print(f"Dumped {len(tasks_to_dump)} tasks to {args.output}")
+        except IOError as e:
+            print(f"Error writing to file: {e}")
+    else:
+        print(json_output)
+
+def handle_history(orch, args):
+    try:
+        task = get_task_id(orch, args.id)
+        if not task:
+            print("Task not found.")
+            return
+        
+        history = orch.get_history(task.id)
+        if not history:
+            print("Task not found.")
+        else:
+            for i, task_version in enumerate(history):
+                print(f"--- Version {len(history) - i} ---")
+                print(format_task(task_version, full=True))
+                print("")
+    except ValueError:
+        print("Invalid UUID or Alias")
 
 def main():
     parser = argparse.ArgumentParser(description="Todo Orchestrator CLI")
@@ -188,228 +412,28 @@ def main():
     history_parser = subparsers.add_parser("history", help="Show task history")
     history_parser.add_argument("id", help="Task UUID")
 
-
-
-
     args = parser.parse_args()
     
     orch = TodoOrchestrator()
 
-    if args.command == "add":
-        deadline = None
-        if args.deadline:
-            try:
-                deadline = datetime.strptime(args.deadline, "%Y-%m-%d")
-            except ValueError:
-                print("Invalid date format. Use YYYY-MM-DD")
-                return
+    handlers = {
+        "add": handle_add,
+        "list": handle_list,
+        "show": handle_show,
+        "update": handle_update,
+        "attach": handle_attach,
+        "extract": handle_extract,
+        "duplicate": handle_duplicate,
+        "kanban": handle_kanban,
+        "archive": handle_archive,
+        "unarchive": handle_unarchive,
+        "delete": handle_delete,
+        "dump": handle_dump,
+        "history": handle_history
+    }
 
-        task = orch.add_task(args.description, deadline=deadline)
-        print(f"Task created: {task.id}")
-
-    elif args.command == "list":
-        if not orch.tasks:
-            print("No tasks found.")
-        else:
-            print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | {'MODIFIED':<16} | DESCRIPTION")
-            print("-" * 120)
-            for task in orch.tasks.values():
-                if not args.all and task.archived:
-                    continue
-                print(format_task(task))
-
-    elif args.command == "show":
-        try:
-            task = get_task_id(orch, args.id, allow_version=True)
-            if task:
-                print(format_task(task, full=True))
-            else:
-                print("Task not found.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "update":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            updates = {}
-            if args.desc:
-                updates['description'] = args.desc
-            if args.status:
-                updates['status'] = args.status
-            
-            if updates:
-                updated_task = orch.update_task(task.id, **updates)
-                if updated_task:
-                    print("Task updated.")
-                    print(format_task(updated_task, full=True))
-                else:
-                    print("Task not found.")
-            else:
-                print("No updates provided.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "attach":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            updated_task = orch.add_attachment(task.id, args.filepath)
-            if updated_task:
-                print("Attachment added.")
-                print(format_task(updated_task, full=True))
-            else:
-                print("Task not found or file error.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "extract":
-        try:
-            task = get_task_id(orch, args.id, allow_version=True)
-            if not task:
-                print("Task not found.")
-                return
-            
-            success = orch.extract_attachment(task.id, args.filename, args.output)
-            if success:
-                print(f"Attachment '{args.filename}' extracted to '{args.output}'")
-            else:
-                print("Failed to extract attachment. Check task ID and filename.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "duplicate":
-        try:
-            task = get_task_id(orch, args.id, allow_version=True)
-            if not task:
-                print("Task not found.")
-                return
-            
-            new_task = orch.duplicate_task(task.id)
-            if new_task:
-                new_alias = generate_alias(new_task.id)
-                print(f"Task duplicated successfully!")
-                print(f"New task: {new_task.id} ({new_alias})")
-                print(format_task(new_task, full=True))
-            else:
-                print("Failed to duplicate task.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "kanban":
-        # Group tasks by status (case-insensitive)
-        status_map = {}
-        for status in args.statuses:
-            status_map[status.lower()] = status
-        
-        tasks_by_status = {status: [] for status in args.statuses}
-        
-        for task in orch.tasks.values():
-            if task.archived:
-                continue
-            task_status_lower = task.status.lower()
-            if task_status_lower in status_map:
-                original_status = status_map[task_status_lower]
-                tasks_by_status[original_status].append(task)
-        
-        # Render and display
-        board = render_kanban_board(tasks_by_status, args.statuses)
-        print(board)
-
-    elif args.command == "archive":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            updated_task = orch.archive_task(task.id)
-            if updated_task:
-                print(f"Task {task.id} archived.")
-            else:
-                print("Failed to archive task.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "unarchive":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            updated_task = orch.unarchive_task(task.id)
-            if updated_task:
-                print(f"Task {task.id} unarchived.")
-            else:
-                print("Failed to unarchive task.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "delete":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            success = orch.delete_task(task.id)
-            if success:
-                print(f"Task {task.id} deleted.")
-            else:
-                print("Failed to delete task.")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
-    elif args.command == "dump":
-        tasks_to_dump = []
-        for task in orch.tasks.values():
-            if not args.all and task.archived:
-                continue
-            
-            if args.history:
-                history = orch.get_history(task.id)
-                for version in history:
-                    tasks_to_dump.append(version.model_dump(mode='json'))
-            else:
-                tasks_to_dump.append(task.model_dump(mode='json'))
-        
-        json_output = json.dumps(tasks_to_dump, indent=2, default=str)
-        
-        if args.output:
-            try:
-                with open(args.output, 'w') as f:
-                    f.write(json_output)
-                print(f"Dumped {len(tasks_to_dump)} tasks to {args.output}")
-            except IOError as e:
-                print(f"Error writing to file: {e}")
-        else:
-            print(json_output)
-
-    elif args.command == "history":
-        try:
-            task = get_task_id(orch, args.id)
-            if not task:
-                print("Task not found.")
-                return
-            
-            history = orch.get_history(task.id)
-            if not history:
-                print("Task not found.")
-            else:
-                for i, task_version in enumerate(history):
-                    print(f"--- Version {len(history) - i} ---")
-                    print(format_task(task_version, full=True))
-                    print("")
-        except ValueError:
-            print("Invalid UUID or Alias")
-
+    if args.command in handlers:
+        handlers[args.command](orch, args)
     else:
         parser.print_help()
 
