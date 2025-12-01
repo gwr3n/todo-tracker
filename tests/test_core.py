@@ -1,11 +1,11 @@
 import pytest
 from src.models import Task, Attachment
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 import os
 
 @pytest.fixture
 def orchestrator(tmp_path):
-    return TodoOrchestrator(root_dir=str(tmp_path))
+    return TodoTracker(root_dir=str(tmp_path))
 
 def test_task_creation():
     task = Task(description="Test task")

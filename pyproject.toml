@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "todo-orchestrator"
+name = "todo-tracker"
 version = "0.1.0"
-description = "A CLI-based todo task orchestrator with versioning and attachments"
+description = "A CLI-based todo task tracker with versioning and attachments"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"

@@ -1,13 +1,13 @@
 import os
 import pytest
 import hashlib
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 from src.storage import ObjectStore
 
 @pytest.fixture
 def clean_store(tmp_path):
     store_dir = tmp_path / "store"
-    orch = TodoOrchestrator(root_dir=str(store_dir))
+    orch = TodoTracker(root_dir=str(store_dir))
     return orch
 
 def test_persistence(clean_store):
@@ -16,7 +16,7 @@ def test_persistence(clean_store):
     task_id = task.id
     
     # Simulate app restart
-    new_orch = TodoOrchestrator(root_dir=orch.storage.root_dir)
+    new_orch = TodoTracker(root_dir=orch.storage.root_dir)
     
     loaded_task = new_orch.get_task(task_id)
     assert loaded_task is not None

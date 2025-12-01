@@ -9,7 +9,7 @@ def test_cli_dump_stdout(tmp_path):
     # OR we can just assume the CLI works if we can run it.
     # But running against the real .todo_store is risky/bad practice for tests.
     # 
-    # The CLI currently hardcodes TodoOrchestrator().
+    # The CLI currently hardcodes TodoTracker().
     # To test properly, we should refactor CLI to accept --root-dir or env var.
     # 
     # For now, let's skip the subprocess test if we can't isolate it, 
@@ -19,11 +19,11 @@ def test_cli_dump_stdout(tmp_path):
 # Let's try in-process testing by importing main and mocking sys.argv and sys.stdout
 from src.cli import main
 from unittest.mock import patch, MagicMock
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 
 @pytest.fixture
 def mock_orch():
-    with patch('src.cli.TodoOrchestrator') as MockOrch:
+    with patch('src.cli.TodoTracker') as MockOrch:
         orch = MockOrch.return_value
         orch.tasks = {}
         yield orch

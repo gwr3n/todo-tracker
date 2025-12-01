@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class TodoOrchestrator:
+class TodoTracker:
     def __init__(self, root_dir: str = ".todo_store"):
         self.storage = ObjectStore(root_dir=root_dir)
         self.tasks: Dict[UUID, Task] = {}
@@ -15,7 +15,7 @@ class TodoOrchestrator:
         # Initialize lock
         from .lock import FileLock
         import os
-        lock_path = os.path.join(root_dir, "orchestrator.lock")
+        lock_path = os.path.join(root_dir, "tracker.lock")
         self.lock = FileLock(lock_path)
         
         self._load_state()

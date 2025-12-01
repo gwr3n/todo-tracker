@@ -1,7 +1,7 @@
 """Test the exact scenario described: Task A (pending -> completed) and Task B (pending only)"""
 import pytest
 import json
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 from src.models import Task
 
 
@@ -18,7 +18,7 @@ def test_dump_history_scenario(tmp_path):
     """
     # Use a temporary storage directory
     storage_dir = tmp_path / ".todo_store"
-    orch = TodoOrchestrator(root_dir=str(storage_dir))
+    orch = TodoTracker(root_dir=str(storage_dir))
     
     # Create Task A (pending)
     task_a = orch.add_task("Task A")

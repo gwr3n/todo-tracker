@@ -13,7 +13,7 @@ import os
 # Add src to path
 sys.path.insert(0, '/Users/gwren/ag_projects/todo_orchestrator')
 
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 
 def test_dump_history():
     # Create a temporary directory for the test
@@ -24,7 +24,7 @@ def test_dump_history():
         print(f"Test directory: {test_dir}\n")
         
         # Initialize orchestrator
-        orch = TodoOrchestrator(root_dir=str(storage_dir))
+        orch = TodoTracker(root_dir=str(storage_dir))
         
         # Step 1: Create Task A (pending)
         print("Step 1: Creating Task A (pending)")

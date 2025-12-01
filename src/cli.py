@@ -11,7 +11,7 @@ from typing import Optional
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.orchestrator import TodoOrchestrator
+from src.tracker import TodoTracker
 from src.alias import generate_alias, resolve_alias
 
 # Configure logging
@@ -350,7 +350,7 @@ def handle_history(orch, args):
         print("Invalid UUID or Alias")
 
 def main():
-    parser = argparse.ArgumentParser(description="Todo Orchestrator CLI")
+    parser = argparse.ArgumentParser(description="Todo Tracker CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # ADD
@@ -414,7 +414,7 @@ def main():
 
     args = parser.parse_args()
     
-    orch = TodoOrchestrator()
+    orch = TodoTracker()
 
     handlers = {
         "add": handle_add,
