@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 
 # Add src to path
-sys.path.insert(0, '/Users/gwren/ag_projects/todo_orchestrator')
+sys.path.insert(0, '/Users/gwren/ag_projects/todo-tracker')
 
 from src.tracker import TodoTracker
 
@@ -24,18 +24,18 @@ def test_all_dump_scenarios():
         print("=" * 70)
         print(f"Test directory: {test_dir}\n")
         
-        # Initialize orchestrator
-        orch = TodoTracker(root_dir=str(storage_dir))
+        # Initialize tracker
+        tracker = TodoTracker(root_dir=str(storage_dir))
         
         # Setup: Create Task A (pending -> completed) and Task B (pending only)
         print("SETUP:")
-        task_a = orch.add_task("Task A")
+        task_a = tracker.add_task("Task A")
         print(f"  1. Created Task A (pending): {task_a.id}")
         
-        task_a_updated = orch.update_task(task_a.id, status="completed")
+        task_a_updated = tracker.update_task(task_a.id, status="completed")
         print(f"  2. Updated Task A to completed")
         
-        task_b = orch.add_task("Task B")
+        task_b = tracker.add_task("Task B")
         print(f"  3. Created Task B (pending): {task_b.id}")
         print()
         
@@ -44,7 +44,7 @@ def test_all_dump_scenarios():
         print("SCENARIO 1: dump (no flags)")
         print("-" * 70)
         tasks_to_dump = []
-        for task in orch.tasks.values():
+        for task in tracker.tasks.values():
             if task.archived:
                 continue
             tasks_to_dump.append(task.model_dump(mode='json'))
@@ -61,10 +61,10 @@ def test_all_dump_scenarios():
         print("SCENARIO 2: dump --history")
         print("-" * 70)
         tasks_to_dump = []
-        for task in orch.tasks.values():
+        for task in tracker.tasks.values():
             if task.archived:
                 continue
-            history = orch.get_history(task.id)
+            history = tracker.get_history(task.id)
             for version in history:
                 tasks_to_dump.append(version.model_dump(mode='json'))
         
@@ -79,14 +79,14 @@ def test_all_dump_scenarios():
         print("-" * 70)
         print("SCENARIO 3: Archive Task B, then dump --history (no -a flag)")
         print("-" * 70)
-        orch.archive_task(task_b.id)
+        tracker.archive_task(task_b.id)
         print(f"  Archived Task B")
         
         tasks_to_dump = []
-        for task in orch.tasks.values():
+        for task in tracker.tasks.values():
             if task.archived:  # Skip archived
                 continue
-            history = orch.get_history(task.id)
+            history = tracker.get_history(task.id)
             for version in history:
                 tasks_to_dump.append(version.model_dump(mode='json'))
         
@@ -102,9 +102,9 @@ def test_all_dump_scenarios():
         print("SCENARIO 4: dump --history -a (include archived)")
         print("-" * 70)
         tasks_to_dump = []
-        for task in orch.tasks.values():
+        for task in tracker.tasks.values():
             # Don't skip archived when -a flag is used
-            history = orch.get_history(task.id)
+            history = tracker.get_history(task.id)
             for version in history:
                 tasks_to_dump.append(version.model_dump(mode='json'))
         

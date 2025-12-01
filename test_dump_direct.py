@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Direct test of the dump --history scenario using the orchestrator API.
+Direct test of the dump --history scenario using the tracker API.
 This bypasses CLI parsing issues to test the core logic.
 """
 import tempfile
@@ -11,7 +11,7 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, '/Users/gwren/ag_projects/todo_orchestrator')
+sys.path.insert(0, '/Users/gwren/ag_projects/todo-tracker')
 
 from src.tracker import TodoTracker
 
@@ -23,19 +23,19 @@ def test_dump_history():
     try:
         print(f"Test directory: {test_dir}\n")
         
-        # Initialize orchestrator
-        orch = TodoTracker(root_dir=str(storage_dir))
+        # Initialize tracker
+        tracker = TodoTracker(root_dir=str(storage_dir))
         
         # Step 1: Create Task A (pending)
         print("Step 1: Creating Task A (pending)")
-        task_a = orch.add_task("Task A")
+        task_a = tracker.add_task("Task A")
         print(f"  - Task A ID: {task_a.id}")
         print(f"  - Status: {task_a.status}")
         print(f"  - Version hash: {task_a.version_hash}\n")
         
         # Step 2: Update Task A to completed
         print("Step 2: Updating Task A to completed")
-        task_a_updated = orch.update_task(task_a.id, status="completed")
+        task_a_updated = tracker.update_task(task_a.id, status="completed")
         print(f"  - Task A ID: {task_a_updated.id}")
         print(f"  - Status: {task_a_updated.status}")
         print(f"  - Version hash: {task_a_updated.version_hash}")
@@ -43,14 +43,14 @@ def test_dump_history():
         
         # Step 3: Create Task B (pending, never modified)
         print("Step 3: Creating Task B (pending)")
-        task_b = orch.add_task("Task B")
+        task_b = tracker.add_task("Task B")
         print(f"  - Task B ID: {task_b.id}")
         print(f"  - Status: {task_b.status}")
         print(f"  - Version hash: {task_b.version_hash}\n")
         
         # Step 4: Check history for Task A
         print("Step 4: Getting history for Task A")
-        history_a = orch.get_history(task_a.id)
+        history_a = tracker.get_history(task_a.id)
         print(f"  - History length: {len(history_a)}")
         for i, version in enumerate(history_a):
             print(f"    Version {i+1}: status={version.status}, hash={version.version_hash[:8]}")
@@ -58,7 +58,7 @@ def test_dump_history():
         
         # Step 5: Check history for Task B
         print("Step 5: Getting history for Task B")
-        history_b = orch.get_history(task_b.id)
+        history_b = tracker.get_history(task_b.id)
         print(f"  - History length: {len(history_b)}")
         for i, version in enumerate(history_b):
             print(f"    Version {i+1}: status={version.status}, hash={version.version_hash[:8]}")
@@ -67,8 +67,8 @@ def test_dump_history():
         # Step 6: Simulate dump --history logic
         print("Step 6: Simulating dump --history")
         tasks_to_dump = []
-        for task in orch.tasks.values():
-            history = orch.get_history(task.id)
+        for task in tracker.tasks.values():
+            history = tracker.get_history(task.id)
             for version in history:
                 tasks_to_dump.append(version.model_dump(mode='json'))
         

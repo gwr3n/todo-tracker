@@ -6,7 +6,7 @@ TEST_DIR=$(mktemp -d)
 cd "$TEST_DIR"
 
 # Use the todo CLI from the project
-TODO_CLI="/Users/gwren/ag_projects/todo_orchestrator/venv/bin/python /Users/gwren/ag_projects/todo_orchestrator/src/cli.py"
+TODO_CLI="/Users/gwren/ag_projects/todo-tracker/venv/bin/python /Users/gwren/ag_projects/todo-tracker/src/cli.py"
 
 echo "=== Test Directory: $TEST_DIR ==="
 echo
