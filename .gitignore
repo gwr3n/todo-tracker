@@ -2,7 +2,7 @@
 .pytest_cache
 __pycache__
 venv
-todo_orchestrator.egg-info
+todo_tracker.egg-info
 dist
 .DS_Store
 .vscode
