@@ -72,7 +72,5 @@ def test_dump_history_scenario(tmp_path):
     ][0]
     print(f"  - Task A (completed): {task_a_completed['id'][:8]}")
 
-    task_b_pending = [
-        t for t in tasks_to_dump if t["description"] == "Task B"
-    ][0]
+    task_b_pending = [t for t in tasks_to_dump if t["description"] == "Task B"][0]
     print(f"  - Task B (pending): {task_b_pending['id'][:8]}")

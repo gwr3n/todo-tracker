@@ -116,9 +116,7 @@ def test_all_dump_scenarios():
                 f"  {i}. {task_data['description']} - "
                 f"Status: {task_data['status']}{archived_marker}"
             )
-        print(
-            "Expected: 4 tasks (Task A v1, Task A v2, Task B v1, Task B v2-archived)"
-        )
+        print("Expected: 4 tasks (Task A v1, Task A v2, Task B v1, Task B v2-archived)")
         print(f"Result: {'✓ PASS' if len(tasks_to_dump) == 4 else '✗ FAIL'}")
         print()
 
