@@ -2,6 +2,23 @@
 
 A powerful CLI-based todo task tracker with versioning, attachments, and Kanban visualization.
 
+Core package badges:
+
+![Codecov (with branch)](https://img.shields.io/codecov/c/gh/gwr3n/todo-tracker/main)
+ ![Python package](https://img.shields.io/github/actions/workflow/status/gwr3n/todo-tracker/.github%2Fworkflows%2Fpython-package.yml) ![Lint and type-check](https://img.shields.io/github/actions/workflow/status/gwr3n/todo-tracker/.github%2Fworkflows%2Flint-type.yml?branch=main&label=lint%20%2B%20type-check) [![PyPI](https://img.shields.io/pypi/v/todo-tracker)](https://pypi.org/project/todo-tracker/) [![Python versions](https://img.shields.io/pypi/pyversions/todo-tracker)](https://pypi.org/project/todo-tracker/) [![License](https://img.shields.io/github/license/gwr3n/todo-tracker)](LICENSE) [![Downloads](https://static.pepy.tech/badge/todo-tracker)](https://pepy.tech/project/todo-tracker) [![Release](https://img.shields.io/github/v/release/gwr3n/todo-tracker)](https://github.com/gwr3n/todo-tracker/releases) [![Wheel](https://img.shields.io/pypi/wheel/todo-tracker)](https://pypi.org/project/todo-tracker/)
+
+Quality and tooling:
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000?logo=python)](https://github.com/psf/black) [![Ruff](https://img.shields.io/badge/lint-ruff-1f79ff?logo=python)](https://github.com/astral-sh/ruff) [![mypy](https://img.shields.io/badge/type--checked-mypy-blue?logo=python)](https://github.com/python/mypy)
+
+Project/community:
+
+[![Issues](https://img.shields.io/github/issues/gwr3n/todo-tracker)](https://github.com/gwr3n/todo-tracker/issues) [![PRs](https://img.shields.io/github/issues-pr/gwr3n/todo-tracker)](https://github.com/gwr3n/todo-tracker/pulls) [![Stars](https://img.shields.io/github/stars/gwr3n/todo-tracker?style=social)](https://github.com/gwr3n/todo-tracker/stargazers)
+
+Docs:
+
+[![Docs](https://img.shields.io/badge/docs-site-blue)](https://github.com/gwr3n/todo-tracker)
+
 ## Features
 
 *   **Task Management**: Create, update, and manage tasks with descriptions, deadlines, and statuses.
