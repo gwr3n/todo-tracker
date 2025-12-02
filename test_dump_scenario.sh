@@ -1,12 +1,13 @@
 #!/bin/bash
 # Test the dump --history scenario in a temporary directory
 
+# Use the todo CLI from the project
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TODO_CLI="$SCRIPT_DIR/venv/bin/python $SCRIPT_DIR/src/cli.py"
+
 # Create temp test directory
 TEST_DIR=$(mktemp -d)
 cd "$TEST_DIR"
-
-# Use the todo CLI from the project
-TODO_CLI="/Users/gwren/ag_projects/todo-tracker/venv/bin/python /Users/gwren/ag_projects/todo-tracker/src/cli.py"
 
 echo "=== Test Directory: $TEST_DIR ==="
 echo

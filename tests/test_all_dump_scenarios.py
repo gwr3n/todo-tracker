@@ -9,7 +9,8 @@ from pathlib import Path
 import sys
 
 # Add src to path
-sys.path.insert(0, '/Users/gwren/ag_projects/todo-tracker')
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
 
 from src.tracker import TodoTracker
 
