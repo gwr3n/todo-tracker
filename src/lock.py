@@ -1,7 +1,7 @@
 import fcntl
-import os
 import time
 from contextlib import contextmanager
+
 
 class FileLock:
     def __init__(self, lock_file: str, timeout: float = 10.0):
@@ -12,7 +12,7 @@ class FileLock:
     @contextmanager
     def acquire(self):
         start_time = time.time()
-        self._fd = open(self.lock_file, 'w')
+        self._fd = open(self.lock_file, "w")
         try:
             while True:
                 try:
@@ -21,9 +21,12 @@ class FileLock:
                     break
                 except IOError:
                     if time.time() - start_time > self.timeout:
-                        raise TimeoutError(f"Could not acquire lock on {self.lock_file} within {self.timeout} seconds")
+                        raise TimeoutError(
+                            f"Could not acquire lock on {self.lock_file} within "
+                            f"{self.timeout} seconds"
+                        )
                     time.sleep(0.1)
-            
+
             yield
         finally:
             # Unlock and close

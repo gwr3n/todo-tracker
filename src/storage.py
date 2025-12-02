@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, Optional
 from uuid import UUID
 
+
 class ObjectStore:
     def __init__(self, root_dir: str = ".todo_store"):
         self.root_dir = root_dir
