@@ -164,7 +164,7 @@ def handle_list(orch, args):
         print("No tasks found.")
     else:
         print(f"{'ID (ALIAS)':<22} | {'STATUS':<10} | {'MODIFIED':<16} | DESCRIPTION")
-        print("-" * 120)
+        print("-" * 100)
         for task in orch.tasks.values():
             if not args.all and task.archived:
                 continue
