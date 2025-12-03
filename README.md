@@ -2,6 +2,8 @@
 
 A powerful git-styled CLI-based todo task tracker with versioning, attachments, and Kanban visualization.
 
+![Demo](img/demo.gif)
+
 Core package badges:
 
 ![Codecov (with branch)](https://img.shields.io/codecov/c/gh/gwr3n/todo-tracker/main)
