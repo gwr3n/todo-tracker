@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Counter Project — Dynamic Timeline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+            margin: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 0;
+            color: #1a202c;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-top: 8px;
+            font-size: 1.1em;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr; /* Stack Gantt above status table */
+            gap: 48px;
+            align-items: stretch;
+            margin-top: 32px;
+        }
+
+        #gantt_div {
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        h2 {
+            color: #1a202c;
+            font-size: 1.5em;
+            margin-bottom: 16px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+            transition: background 0.2s;
+        }
+
+        tfoot td {
+            font-weight: 600;
+            background: #edf2f7;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-development {
+            background: #e6f7ff;
+            color: #0066cc;
+            border: 1px solid #91d5ff;
+        }
+
+        .badge-testing {
+            background: #fff7e6;
+            color: #d46b08;
+            border: 1px solid #ffd591;
+        }
+
+        .badge-design {
+            background: #f0f5ff;
+            color: #2f54eb;
+            border: 1px solid #adc6ff;
+        }
+
+        .status-completed {
+            color: #52c41a;
+            font-weight: 600;
+        }
+
+        .status-in-progress {
+            color: #1890ff;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            color: #8c8c8c;
+            font-weight: 600;
+        }
+
+        .event-log {
+            margin-top: 24px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .event-item {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .event-time {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .event-type {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+    </style>
+    <script>
+        google.charts.load('current', { packages: ['gantt'] });
+
+        let tasksData = [];
+        let taskEvents = [];
+
+        // Load JSON data
+        async function loadTaskData() {
+            try {
+                const response = await fetch('counter_tasks.json');
+                const data = await response.json();
+                tasksData = data;
+                processTaskData();
+                google.charts.setOnLoadCallback(drawChart);
+            } catch (error) {
+                console.error('Error loading task data:', error);
+                document.getElementById('gantt_div').innerHTML = '<div class="loading">Error loading task data</div>';
+            }
+        }
+
+        function processTaskData() {
+            // Group tasks by ID to track their lifecycle
+            const taskMap = new Map();
+
+            tasksData.forEach(task => {
+                if (!taskMap.has(task.id)) {
+                    taskMap.set(task.id, []);
+                }
+                taskMap.get(task.id).push(task);
+            });
+
+            // Process each task's lifecycle
+            taskMap.forEach((versions, taskId) => {
+                // Sort by modified_at to get chronological order
+                versions.sort((a, b) => new Date(a.modified_at) - new Date(b.modified_at));
+
+                const firstVersion = versions[0];
+                const lastVersion = versions[versions.length - 1];
+
+                // Record creation event
+                taskEvents.push({
+                    type: 'created',
+                    taskId: taskId,
+                    description: firstVersion.description,
+                    timestamp: new Date(firstVersion.created_at),
+                    status: firstVersion.status
+                });
+
+                // Record status changes
+                for (let i = 1; i < versions.length; i++) {
+                    if (versions[i].status !== versions[i - 1].status) {
+                        taskEvents.push({
+                            type: 'status_change',
+                            taskId: taskId,
+                            description: versions[i].description,
+                            timestamp: new Date(versions[i].modified_at),
+                            oldStatus: versions[i - 1].status,
+                            newStatus: versions[i].status
+                        });
+                    }
+                }
+
+                // Record completion event if task is completed
+                if (lastVersion.status === 'completed') {
+                    taskEvents.push({
+                        type: 'completed',
+                        taskId: taskId,
+                        description: lastVersion.description,
+                        timestamp: new Date(lastVersion.modified_at)
+                    });
+                }
+            });
+
+            // Sort events chronologically
+            taskEvents.sort((a, b) => a.timestamp - b.timestamp);
+
+            renderEventLog();
+            renderStats(taskMap);
+        }
+
+        function renderEventLog() {
+            const eventLog = document.getElementById('event-log');
+            eventLog.innerHTML = '<h3 style="margin-top:0; color:#2d3748;">Task Events Timeline</h3>';
+
+            taskEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'event-item';
+
+                let eventText = '';
+                if (event.type === 'created') {
+                    eventText = `<span class="event-type">Created:</span> ${event.description}`;
+                } else if (event.type === 'status_change') {
+                    eventText = `<span class="event-type">Status Change:</span> ${event.description} (${event.oldStatus} → ${event.newStatus})`;
+                } else if (event.type === 'completed') {
+                    eventText = `<span class="event-type">Completed:</span> ${event.description}`;
+                }
+
+                eventDiv.innerHTML = `
+          ${eventText}
+          <div class="event-time">${event.timestamp.toLocaleString()}</div>
+        `;
+                eventLog.appendChild(eventDiv);
+            });
+        }
+
+        function renderStats(taskMap) {
+            const totalTasks = taskMap.size;
+            let completedTasks = 0;
+            let inProgressTasks = 0;
+            let pendingTasks = 0;
+
+            taskMap.forEach(versions => {
+                const latestVersion = versions[versions.length - 1];
+                if (latestVersion.status === 'completed') completedTasks++;
+                else if (latestVersion.status === 'in-progress') inProgressTasks++;
+                else if (latestVersion.status === 'pending') pendingTasks++;
+            });
+
+            document.getElementById('stat-total').textContent = totalTasks;
+            document.getElementById('stat-completed').textContent = completedTasks;
+            document.getElementById('stat-events').textContent = taskEvents.length;
+
+            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            document.getElementById('stat-rate').textContent = completionRate + '%';
+        }
+
+        function drawChart() {
+            // Build lifecycle map: id -> all versions
+            const lifecycleMap = new Map();
+            tasksData.forEach(task => {
+                if (!lifecycleMap.has(task.id)) lifecycleMap.set(task.id, []);
+                lifecycleMap.get(task.id).push(task);
+            });
+
+            // Categorization map
+            const categoryMap = {
+                'Design': 'Design',
+                'Create': 'Development',
+                'Implement': 'Development',
+                'Add': 'Development',
+                'Test': 'Testing'
+            };
+
+            function getCategory(description) {
+                for (const [key, value] of Object.entries(categoryMap)) {
+                    if (description.includes(key)) return value;
+                }
+                return 'Development';
+            }
+
+            const data = new google.visualization.DataTable();
+            data.addColumn('string', 'Task ID');
+            data.addColumn('string', 'Task Name');
+            data.addColumn('string', 'Resource');
+            data.addColumn('date', 'Start Date');
+            data.addColumn('date', 'End Date');
+            data.addColumn('number', 'Duration');
+            data.addColumn('number', 'Percent Complete');
+            data.addColumn('string', 'Dependencies');
+
+            const rows = [];
+            const tableRows = [];
+
+            lifecycleMap.forEach((versions, taskId) => {
+                // Sort chronologically by modified_at (fallback to created_at)
+                versions.sort((a, b) => new Date(a.modified_at || a.created_at) - new Date(b.modified_at || b.created_at));
+
+                // Find the first version where task becomes in-progress (or was created already in-progress)
+                const firstInProgress = versions.find(v => v.status === 'in-progress');
+                // If task never in-progress, but ends completed without explicit in-progress phase, we still treat completion as start
+                const completedWithoutInProgress = !firstInProgress && versions[versions.length - 1].status === 'completed';
+                if (!firstInProgress && !completedWithoutInProgress) {
+                    // Skip tasks that have never reached in-progress nor completed
+                    return;
+                }
+
+                const lastVersion = versions[versions.length - 1];
+
+                // Determine start date: when status first became in-progress, else completion timestamp
+                let startDateSource;
+                if (firstInProgress) {
+                    // If firstInProgress is the first recorded version, use created_at; else use modified_at
+                    const isInitial = firstInProgress === versions[0];
+                    startDateSource = isInitial ? firstInProgress.created_at : (firstInProgress.modified_at || firstInProgress.created_at);
+                } else {
+                    // Completed without in-progress phase
+                    startDateSource = lastVersion.modified_at || lastVersion.created_at;
+                }
+                const startDate = new Date(startDateSource);
+                const endDate = new Date(lastVersion.modified_at || lastVersion.created_at);
+
+                // Guard: ensure end >= start
+                if (endDate < startDate) return; // Skip inconsistent data
+
+                const category = getCategory(lastVersion.description);
+                const percentComplete = lastVersion.status === 'completed' ? 100 : 50; // Only in-progress or completed appear
+
+                rows.push([
+                    taskId,
+                    lastVersion.description,
+                    category,
+                    startDate,
+                    endDate,
+                    null,
+                    percentComplete,
+                    null
+                ]);
+
+                const durationMin = Math.round((endDate - startDate) / 60000);
+                tableRows.push({
+                    description: lastVersion.description,
+                    category: category,
+                    status: lastVersion.status,
+                    start: startDate.toLocaleString(),
+                    end: endDate.toLocaleString(),
+                    duration: durationMin
+                });
+            });
+
+            data.addRows(rows);
+
+            const options = {
+                height: 500,
+                gantt: {
+                    trackHeight: 36,
+                    innerGridTrack: { fill: '#fbfbfb' },
+                    innerGridDarkTrack: { fill: '#f2f2f2' },
+                    labelStyle: { fontSize: 13 },
+                    palette: [
+                        { "color": "#667eea", "dark": "#5568d3", "light": "#b8c1f7" },
+                        { "color": "#f093fb", "dark": "#d871e8", "light": "#f9c9fd" },
+                        { "color": "#4facfe", "dark": "#2d8fe0", "light": "#a8d8ff" }
+                    ]
+                }
+            };
+
+            const chart = new google.visualization.Gantt(document.getElementById('gantt_div'));
+            chart.draw(data, options);
+
+            // Hide x-axis tick labels and marks (post-render DOM manipulation)
+            google.visualization.events.addListener(chart, 'ready', () => {
+                const svg = document.querySelector('#gantt_div svg');
+                if (!svg) return;
+                // Hide numeric tick labels
+                svg.querySelectorAll('text').forEach(t => {
+                    if (/^\d+$/.test(t.textContent.trim())) {
+                        t.style.display = 'none';
+                    }
+                });
+                // Optionally hide axis lines (thin horizontal/vertical rules)
+                svg.querySelectorAll('path').forEach(p => {
+                    const stroke = p.getAttribute('stroke');
+                    if (stroke && (stroke === '#ccc' || stroke === '#cccccc')) {
+                        p.style.display = 'none';
+                    }
+                });
+            });
+
+            renderTable(tableRows);
+        }
+
+        function renderTable(rows) {
+            const tbody = document.getElementById('task-table-body');
+            const tfoot = document.getElementById('task-table-foot');
+            tbody.innerHTML = '';
+
+            let totalDuration = 0;
+            let completedCount = 0;
+            let earliestStart = null;
+            let latestEnd = null;
+
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+
+                const badgeClass = row.category === 'Development' ? 'badge-development' :
+                    row.category === 'Testing' ? 'badge-testing' : 'badge-design';
+
+                const statusClass = row.status === 'completed' ? 'status-completed' :
+                    row.status === 'in-progress' ? 'status-in-progress' : 'status-pending';
+
+                tr.innerHTML = `
+          <td>${row.description}</td>
+          <td><span class='badge ${badgeClass}'>${row.category}</span></td>
+          <td><span class='${statusClass}'>${row.status}</span></td>
+          <td>${row.start}</td>
+          <td>${row.end}</td>
+          <td>${row.duration}</td>
+        `;
+                tbody.appendChild(tr);
+
+                totalDuration += row.duration;
+                if (row.status === 'completed') completedCount++;
+
+                const startDate = new Date(row.start);
+                const endDate = new Date(row.end);
+                if (!earliestStart || startDate < earliestStart) earliestStart = startDate;
+                if (!latestEnd || endDate > latestEnd) latestEnd = endDate;
+            });
+
+            tfoot.innerHTML = `
+        <tr>
+          <td colspan="6">
+            Total tasks: ${rows.length} | Completed: ${completedCount} | 
+            Time span: ${earliestStart?.toLocaleString()} → ${latestEnd?.toLocaleString()} | 
+            Aggregate duration: ${totalDuration} min
+          </td>
+        </tr>
+      `;
+        }
+
+        // Load data when page loads
+        window.addEventListener('load', loadTaskData);
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Counter Project Timeline</h1>
+        <div class="subtitle">Dynamically loaded from <code>counter_tasks.json</code> with task creation and completion
+            event tracking</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-completed">-</div>
+                <div class="stat-label">Completed Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-events">-</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-rate">-</div>
+                <div class="stat-label">Completion Rate</div>
+            </div>
+        </div>
+
+        <div class="layout">
+            <div>
+                <div id="gantt_div">
+                    <div class="loading">Loading task data...</div>
+                </div>
+            </div>
+            <div>
+                <h2>Status Progress</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Start</th>
+                            <th>Finish</th>
+                            <th>Duration (min)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body">
+                        <tr>
+                            <td colspan="6" class="loading">Loading...</td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="task-table-foot">
+                        <tr>
+                            <td colspan="6">Loading...</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="event-log" id="event-log">
+            <div class="loading">Loading events...</div>
+        </div>
+    </div>
+</body>
+
+</html>
