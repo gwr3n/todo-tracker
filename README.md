@@ -45,18 +45,13 @@ Ensure you have Python 3.8+ installed.
 
 1.  Clone the repository:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/gwr3n/todo-tracker.git
     cd todo-tracker
     ```
 
 2.  Install the package:
     ```bash
-    pip install .
-    ```
-
-    Or for development (editable mode):
-    ```bash
-    pip install -e .
+    pip install todo-tracker
     ```
 
 ## Usage
