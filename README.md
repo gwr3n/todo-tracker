@@ -25,9 +25,19 @@ Docs:
 *   **Versioning**: Every change to a task is versioned. You can view the full history of a task and revert to previous states (conceptually).
 *   **Attachments**: Attach files to tasks. Files are stored efficiently using content-addressable storage (deduplication).
 *   **Aliases**: Tasks are assigned human-readable aliases (e.g., `Misty-Rat`) for easier reference than UUIDs.
-*   **Kanban Board**: Visualize your tasks in a terminal-based Kanban board.
+*   **Kanban Board**: Visualize your tasks in a terminal-based Kanban board. 
 *   **Archiving**: Archive completed or stale tasks to keep your active list clean.
-*   **JSON Dump**: Export your data to JSON for backup or analysis.
+*   **JSON Dump**: Export your data to [JSON](json/counter_tasks.json) for backup or analysis.
+<br>
+<br>
+<div style="text-align: center;">
+    <img src="img/kanban.png" alt="Kanban" width="50%">
+</div>
+<br>
+<br>
+<div style="text-align: center;">
+    <img src="img/CLI.png" alt="CLI" width="85%">
+</div>
 
 ## Installation
 
