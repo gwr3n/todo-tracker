@@ -16,7 +16,6 @@ from src.cli import (
 )
 from src.models import Task
 from uuid import UUID
-from datetime import datetime
 
 
 @pytest.fixture
@@ -49,9 +48,7 @@ class TestHandleAdd:
 
         handle_add(mock_orch, args)
 
-        mock_orch.add_task.assert_called_once_with(
-            "New task", deadline=None
-        )
+        mock_orch.add_task.assert_called_once_with("New task", deadline=None)
         captured = capsys.readouterr()
         assert "Task created" in captured.out
 
@@ -252,7 +249,9 @@ class TestHandleExtract:
         captured = capsys.readouterr()
         assert "extracted to" in captured.out
 
-    def test_extract_nonexistent_attachment(self, mock_orch, sample_task, tmp_path, capsys):
+    def test_extract_nonexistent_attachment(
+        self, mock_orch, sample_task, tmp_path, capsys
+    ):
         """Test extracting an attachment that doesn't exist."""
         args = MagicMock()
         args.id = str(sample_task.id)
