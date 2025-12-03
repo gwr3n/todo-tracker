@@ -49,7 +49,7 @@ class TestTaskLifecycle:
 
 class TestAttachmentWorkflow:
     def test_attach_and_extract_workflow(self, isolated_tracker, tmp_path):
-        """Test complete attachment workflow: add task -> attach file -> extract file."""
+        """Test complete attachment workflow: add task -> attach file -> extract file"""
         # Create task
         task = isolated_tracker.add_task("Task with attachment")
 
