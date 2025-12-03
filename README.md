@@ -43,6 +43,11 @@ Ensure you have Python 3.8+ installed.
 
 2.  Install the package:
     ```bash
+    pip install .
+    ```
+
+3. Or install from PyPI:
+    ```bash
     pip install todo-tracker
     ```
 
