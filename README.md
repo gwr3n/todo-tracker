@@ -31,7 +31,7 @@ Docs:
 *   **Kanban Board**: Visualize your tasks in a terminal-based Kanban board. 
 *   **Archiving**: Archive completed or stale tasks to keep your active list clean.
 *   **GPT Integration**: Use in combination with GPT Agents to track progress and generate project summaries.
-*   **JSON Dump**: Export your data to [JSON](docs/counter_tasks.json) for backup or [analysis](https://gwren.github.io/todo-tracker/index.html).
+*   **JSON Dump**: Export your data to [JSON](docs/counter_tasks.json) for backup or [analysis](https://gwr3n.github.io/todo-tracker/index.html).
 
 ## Installation
 
