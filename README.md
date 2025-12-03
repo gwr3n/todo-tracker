@@ -1,6 +1,6 @@
 # Todo Tracker
 
-A powerful CLI-based todo task tracker with versioning, attachments, and Kanban visualization.
+A powerful git-styled CLI-based todo task tracker with versioning, attachments, and Kanban visualization.
 
 Core package badges:
 
