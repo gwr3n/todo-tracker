@@ -22,11 +22,13 @@ Docs:
 ## Features
 
 *   **Task Management**: Create, update, and manage tasks with descriptions, deadlines, and statuses.
+*   **Task Storage**: Tasks are stored locally in a git-like repository.
 *   **Versioning**: Every change to a task is versioned. You can view the full history of a task and revert to previous states (conceptually).
 *   **Attachments**: Attach files to tasks. Files are stored efficiently using content-addressable storage (deduplication).
 *   **Aliases**: Tasks are assigned human-readable aliases (e.g., `Misty-Rat`) for easier reference than UUIDs.
 *   **Kanban Board**: Visualize your tasks in a terminal-based Kanban board. 
 *   **Archiving**: Archive completed or stale tasks to keep your active list clean.
+*   **GPT Integration**: Use in combination with GPT Agents to track progress and generate project summaries.
 *   **JSON Dump**: Export your data to [JSON](json/counter_tasks.json) for backup or analysis.
 <br>
 <br>
