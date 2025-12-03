@@ -30,16 +30,6 @@ Docs:
 *   **Archiving**: Archive completed or stale tasks to keep your active list clean.
 *   **GPT Integration**: Use in combination with GPT Agents to track progress and generate project summaries.
 *   **JSON Dump**: Export your data to [JSON](json/counter_tasks.json) for backup or analysis.
-<br>
-<br>
-<div style="text-align: center;">
-    <img src="img/kanban.png" alt="Kanban" width="50%">
-</div>
-<br>
-<br>
-<div style="text-align: center;">
-    <img src="img/CLI.png" alt="CLI" width="85%">
-</div>
 
 ## Installation
 
@@ -73,6 +63,10 @@ The main command is `todo`.
     todo list --all  # Include archived tasks
     ```
 
+    <div style="text-align: center;">
+        <img src="img/CLI.png" alt="CLI" width="85%">
+    </div>
+
 *   **Show task details:**
     ```bash
     todo show <task_id_or_alias>
@@ -101,6 +95,10 @@ The main command is `todo`.
     ```bash
     todo kanban pending in-progress done
     ```
+
+    <div style="text-align: center;">
+        <img src="img/kanban.png" alt="Kanban" width="50%">
+    </div>
 
 *   **Archive/Unarchive:**
     ```bash
