@@ -194,6 +194,13 @@ def handle_update(orch, args):
             updates["description"] = args.desc
         if args.status:
             updates["status"] = args.status
+        if args.deadline:
+            try:
+                deadline = datetime.strptime(args.deadline, "%Y-%m-%d")
+                updates["deadline"] = deadline
+            except ValueError:
+                print("Invalid date format. Use YYYY-MM-DD")
+                return
 
         if updates:
             updated_task = orch.update_task(task.id, **updates)
@@ -398,6 +405,7 @@ def main():
     update_parser.add_argument("id", help="Task UUID")
     update_parser.add_argument("--desc", help="New description")
     update_parser.add_argument("--status", help="New status")
+    update_parser.add_argument("--deadline", help="New deadline (YYYY-MM-DD)")
 
     # ATTACH
     attach_parser = subparsers.add_parser("attach", help="Attach a file to a task")

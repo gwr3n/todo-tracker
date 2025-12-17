@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "todo-tracker"
-version = "0.1.0"
+version = "0.1.1"
 description = "A CLI-based todo task tracker with versioning and attachments"
 readme = "README.md"
 license = {file = "LICENSE"}

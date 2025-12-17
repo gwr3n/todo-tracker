@@ -46,6 +46,40 @@ class TestTaskLifecycle:
         # Verify deletion
         assert isolated_tracker.get_task(task_id) is None
 
+    def test_update_task_deadline(self, isolated_tracker):
+        """Test updating task deadline."""
+        from datetime import datetime
+
+        # Add task without deadline
+        task = isolated_tracker.add_task("Task with deadline")
+        task_id = task.id
+        assert task.deadline is None
+
+        # Update with deadline
+        new_deadline = datetime(2025, 12, 31)
+        updated = isolated_tracker.update_task(task_id, deadline=new_deadline)
+        assert updated.deadline == new_deadline
+
+        # Verify deadline persists
+        reloaded = isolated_tracker.get_task(task_id)
+        assert reloaded.deadline == new_deadline
+
+        # Update deadline to a different date
+        newer_deadline = datetime(2026, 1, 15)
+        updated_again = isolated_tracker.update_task(task_id, deadline=newer_deadline)
+        assert updated_again.deadline == newer_deadline
+
+        # Verify can update deadline along with other fields
+        final_update = isolated_tracker.update_task(
+            task_id,
+            description="Updated description",
+            status="in-progress",
+            deadline=datetime(2026, 2, 28),
+        )
+        assert final_update.description == "Updated description"
+        assert final_update.status == "in-progress"
+        assert final_update.deadline == datetime(2026, 2, 28)
+
 
 class TestAttachmentWorkflow:
     def test_attach_and_extract_workflow(self, isolated_tracker, tmp_path):
