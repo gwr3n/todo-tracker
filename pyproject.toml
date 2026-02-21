@@ -58,6 +58,9 @@ exclude = '''
 )/
 '''
 
+[tool.flake8]
+max-line-length = 300
+
 [tool.pyright]
 include = ["src", "tests"]
 extraPaths = ["."]
