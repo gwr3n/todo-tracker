@@ -21,10 +21,7 @@ class FileLock:
                     break
                 except IOError:
                     if time.time() - start_time > self.timeout:
-                        raise TimeoutError(
-                            f"Could not acquire lock on {self.lock_file} within "
-                            f"{self.timeout} seconds"
-                        )
+                        raise TimeoutError(f"Could not acquire lock on {self.lock_file} within " f"{self.timeout} seconds")
                     time.sleep(0.1)
 
             yield

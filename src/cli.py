@@ -32,14 +32,10 @@ def format_task(task, full=False):
 
         if task.attachments:
             return (
-                f"{task_id:<20} @ | {task.status.ljust(10)} | {modified_str:<16} | "
-                f"{task.description.splitlines()[0]:<22}"
+                f"{task_id:<20} @ | {task.status.ljust(10)} | {modified_str:<16} | " f"{task.description.splitlines()[0]:<22}"
             )
         else:
-            return (
-                f"{task_id:<22} | {task.status.ljust(10)} | {modified_str:<16} | "
-                f"{task.description.splitlines()[0]:<22}"
-            )
+            return f"{task_id:<22} | {task.status.ljust(10)} | {modified_str:<16} | " f"{task.description.splitlines()[0]:<22}"
 
     lines = [
         f"ID:          {task.id} ({alias})",
@@ -95,11 +91,7 @@ def render_kanban_board(tasks_by_status, statuses):
         for task in tasks:
             alias = generate_alias(task.id)
             # Truncate description
-            desc = (
-                task.description[: COL_WIDTH - 2]
-                if len(task.description) > COL_WIDTH - 2
-                else task.description
-            )
+            desc = task.description[: COL_WIDTH - 2] if len(task.description) > COL_WIDTH - 2 else task.description
             col_data.append(f"{desc}")
             col_data.append(f"({alias})")
             col_data.append("")  # Spacing
@@ -392,9 +384,7 @@ def main():
 
     # LIST
     list_parser = subparsers.add_parser("list", help="List all tasks")
-    list_parser.add_argument(
-        "-a", "--all", action="store_true", help="Show all tasks including archived"
-    )
+    list_parser.add_argument("-a", "--all", action="store_true", help="Show all tasks including archived")
 
     # SHOW
     show_parser = subparsers.add_parser("show", help="Show task details")
@@ -413,9 +403,7 @@ def main():
     attach_parser.add_argument("filepath", help="Path to file")
 
     # EXTRACT
-    extract_parser = subparsers.add_parser(
-        "extract", help="Extract an attachment from a task"
-    )
+    extract_parser = subparsers.add_parser("extract", help="Extract an attachment from a task")
     extract_parser.add_argument("id", help="Task UUID or Alias")
     extract_parser.add_argument("filename", help="Attachment filename")
     extract_parser.add_argument("--output", required=True, help="Output path")
@@ -425,9 +413,7 @@ def main():
     duplicate_parser.add_argument("id", help="Task UUID or Alias")
 
     kanban_parser = subparsers.add_parser("kanban", help="Display kanban board")
-    kanban_parser.add_argument(
-        "statuses", nargs="+", help="Status values to display as columns"
-    )
+    kanban_parser.add_argument("statuses", nargs="+", help="Status values to display as columns")
 
     # ARCHIVE
     archive_parser = subparsers.add_parser("archive", help="Archive a task")
@@ -443,12 +429,8 @@ def main():
 
     # DUMP
     dump_parser = subparsers.add_parser("dump", help="Dump tasks to JSON")
-    dump_parser.add_argument(
-        "-a", "--all", action="store_true", help="Include archived tasks"
-    )
-    dump_parser.add_argument(
-        "--history", action="store_true", help="Include all versions of tasks"
-    )
+    dump_parser.add_argument("-a", "--all", action="store_true", help="Include archived tasks")
+    dump_parser.add_argument("--history", action="store_true", help="Include all versions of tasks")
     dump_parser.add_argument("--output", help="Output file path")
 
     # HISTORY

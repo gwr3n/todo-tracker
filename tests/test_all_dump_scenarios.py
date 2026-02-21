@@ -2,6 +2,7 @@
 """
 Test all dump scenarios to identify the issue.
 """
+
 import tempfile
 import shutil
 from pathlib import Path
@@ -112,10 +113,7 @@ def test_all_dump_scenarios():
         print(f"Tasks in dump: {len(tasks_to_dump)}")
         for i, task_data in enumerate(tasks_to_dump, 1):
             archived_marker = " [ARCHIVED]" if task_data.get("archived") else ""
-            print(
-                f"  {i}. {task_data['description']} - "
-                f"Status: {task_data['status']}{archived_marker}"
-            )
+            print(f"  {i}. {task_data['description']} - " f"Status: {task_data['status']}{archived_marker}")
         print("Expected: 4 tasks (Task A v1, Task A v2, Task B v1, Task B v2-archived)")
         print(f"Result: {'✓ PASS' if len(tasks_to_dump) == 4 else '✗ FAIL'}")
         print()

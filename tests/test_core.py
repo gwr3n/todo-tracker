@@ -25,9 +25,7 @@ def test_orchestrator_add_task(orchestrator):
 
 def test_orchestrator_update_task(orchestrator):
     task = orchestrator.add_task(description="Old Description")
-    updated_task = orchestrator.update_task(
-        task.id, description="New Description", status="completed"
-    )
+    updated_task = orchestrator.update_task(task.id, description="New Description", status="completed")
 
     assert updated_task.description == "New Description"
     assert updated_task.status == "completed"

@@ -99,9 +99,7 @@ class TestAttachmentWorkflow:
 
         # Extract file
         output_file = tmp_path / "extracted.txt"
-        success = isolated_tracker.extract_attachment(
-            task.id, "original.txt", str(output_file)
-        )
+        success = isolated_tracker.extract_attachment(task.id, "original.txt", str(output_file))
         assert success is True
         assert output_file.exists()
         assert output_file.read_text() == test_content
@@ -129,9 +127,7 @@ class TestAttachmentWorkflow:
         # Extract all attachments
         for i in range(3):
             output = tmp_path / f"extracted{i}.txt"
-            success = isolated_tracker.extract_attachment(
-                task.id, f"file{i}.txt", str(output)
-            )
+            success = isolated_tracker.extract_attachment(task.id, f"file{i}.txt", str(output))
             assert success is True
             assert output.read_text() == f"Content {i}"
 

@@ -82,9 +82,7 @@ class TodoTracker:
                     if isinstance(att, Attachment):
                         real_attachments.append(att)
 
-            task = Task(
-                description=description, deadline=deadline, attachments=real_attachments
-            )
+            task = Task(description=description, deadline=deadline, attachments=real_attachments)
             return self._commit_task(task)
 
     def get_task(self, task_id: UUID) -> Optional[Task]:
@@ -125,9 +123,7 @@ class TodoTracker:
                 task_to_delete = self.tasks[task_id]
 
                 # Identify attachments to delete
-                attachments_to_check = {
-                    att.content_hash for att in task_to_delete.attachments
-                }
+                attachments_to_check = {att.content_hash for att in task_to_delete.attachments}
 
                 # Find attachments in use by OTHER tasks
                 in_use_hashes = set()
@@ -207,9 +203,7 @@ class TodoTracker:
 
         return history
 
-    def extract_attachment(
-        self, task_id: UUID, filename: str, output_path: str
-    ) -> bool:
+    def extract_attachment(self, task_id: UUID, filename: str, output_path: str) -> bool:
         """Extracts an attachment from a task and saves it to the specified path."""
         task = self.get_task(task_id)
         if not task:

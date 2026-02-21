@@ -3,6 +3,7 @@
 Direct test of the dump --history scenario using the tracker API.
 This bypasses CLI parsing issues to test the core logic.
 """
+
 import tempfile
 import shutil
 from pathlib import Path
@@ -53,10 +54,7 @@ def test_dump_history():
         history_a = tracker.get_history(task_a.id)
         print(f"  - History length: {len(history_a)}")
         for i, version in enumerate(history_a):
-            print(
-                f"    Version {i+1}: status={version.status}, "
-                f"hash={version.version_hash[:8]}"
-            )
+            print(f"    Version {i+1}: status={version.status}, " f"hash={version.version_hash[:8]}")
         print()
 
         # Step 5: Check history for Task B
@@ -64,10 +62,7 @@ def test_dump_history():
         history_b = tracker.get_history(task_b.id)
         print(f"  - History length: {len(history_b)}")
         for i, version in enumerate(history_b):
-            print(
-                f"    Version {i+1}: status={version.status}, "
-                f"hash={version.version_hash[:8]}"
-            )
+            print(f"    Version {i+1}: status={version.status}, " f"hash={version.version_hash[:8]}")
         print()
 
         # Step 6: Simulate dump --history logic
@@ -84,10 +79,7 @@ def test_dump_history():
         # Step 7: Analyze the dump
         print("Step 7: Analyzing dump contents")
         for i, task_data in enumerate(tasks_to_dump, 1):
-            print(
-                f"  {i}. {task_data['description']} - Status: {task_data['status']} - "
-                f"ID: {task_data['id'][:8]}"
-            )
+            print(f"  {i}. {task_data['description']} - Status: {task_data['status']} - " f"ID: {task_data['id'][:8]}")
         print()
 
         # Verification

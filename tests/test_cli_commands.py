@@ -151,9 +151,7 @@ class TestHandleUpdate:
         args.status = None
         args.deadline = None
 
-        updated_task = Task(
-            id=sample_task.id, description="Updated description", status="pending"
-        )
+        updated_task = Task(id=sample_task.id, description="Updated description", status="pending")
         mock_orch.update_task.return_value = updated_task
 
         with patch("src.cli.get_task_id", return_value=sample_task):
@@ -171,9 +169,7 @@ class TestHandleUpdate:
         args.status = "completed"
         args.deadline = None
 
-        updated_task = Task(
-            id=sample_task.id, description="Sample Task", status="completed"
-        )
+        updated_task = Task(id=sample_task.id, description="Sample Task", status="completed")
         mock_orch.update_task.return_value = updated_task
 
         with patch("src.cli.get_task_id", return_value=sample_task):
@@ -243,15 +239,11 @@ class TestHandleExtract:
         with patch("src.cli.get_task_id", return_value=sample_task):
             handle_extract(mock_orch, args)
 
-        mock_orch.extract_attachment.assert_called_once_with(
-            sample_task.id, "test.txt", str(output_file)
-        )
+        mock_orch.extract_attachment.assert_called_once_with(sample_task.id, "test.txt", str(output_file))
         captured = capsys.readouterr()
         assert "extracted to" in captured.out
 
-    def test_extract_nonexistent_attachment(
-        self, mock_orch, sample_task, tmp_path, capsys
-    ):
+    def test_extract_nonexistent_attachment(self, mock_orch, sample_task, tmp_path, capsys):
         """Test extracting an attachment that doesn't exist."""
         args = MagicMock()
         args.id = str(sample_task.id)
@@ -324,9 +316,7 @@ class TestHandleArchive:
         args = MagicMock()
         args.id = str(sample_task.id)
 
-        archived_task = Task(
-            id=sample_task.id, description="Sample Task", archived=True
-        )
+        archived_task = Task(id=sample_task.id, description="Sample Task", archived=True)
         mock_orch.archive_task.return_value = archived_task
 
         with patch("src.cli.get_task_id", return_value=sample_task):
@@ -343,9 +333,7 @@ class TestHandleUnarchive:
         args = MagicMock()
         args.id = str(sample_task.id)
 
-        unarchived_task = Task(
-            id=sample_task.id, description="Sample Task", archived=False
-        )
+        unarchived_task = Task(id=sample_task.id, description="Sample Task", archived=False)
         mock_orch.unarchive_task.return_value = unarchived_task
 
         with patch("src.cli.get_task_id", return_value=sample_task):
