@@ -2,7 +2,7 @@
 
 A powerful git-styled CLI-based todo task tracker with versioning, attachments, and Kanban visualization.
 
-![Demo](img/demo.gif)
+![Demo](https://github.com/gwr3n/todo-tracker/raw/main/img/demo.gif)
 
 Core package badges:
 
@@ -71,7 +71,7 @@ The main command is `todo`.
     ```
 
     <div style="text-align: center;">
-        <img src="img/CLI.png" alt="CLI" width="85%">
+        <img src="https://github.com/gwr3n/todo-tracker/raw/main/img/CLI.png" alt="CLI" width="85%">
     </div>
 
 *   **Show task details:**
@@ -104,7 +104,7 @@ The main command is `todo`.
     ```
 
     <div style="text-align: center;">
-        <img src="img/kanban.png" alt="Kanban" width="50%">
+        <img src="https://github.com/gwr3n/todo-tracker/raw/main/img/kanban.png" alt="Kanban" width="50%">
     </div>
 
 *   **Archive/Unarchive:**
