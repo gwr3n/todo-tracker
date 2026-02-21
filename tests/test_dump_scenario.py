@@ -52,24 +52,14 @@ def test_dump_history_scenario(tmp_path):
 
     # Verify the statuses
     statuses = [t["status"] for t in tasks_to_dump]
-    assert (
-        statuses.count("pending") == 2
-    ), "Should have 2 pending tasks (Task A v1 and Task B v1)"
+    assert statuses.count("pending") == 2, "Should have 2 pending tasks (Task A v1 and Task B v1)"
     assert statuses.count("completed") == 1, "Should have 1 completed task (Task A v2)"
 
     print(f"\n✓ Dump contains {len(tasks_to_dump)} tasks as expected")
-    task_a_pending = [
-        t
-        for t in tasks_to_dump
-        if t["description"] == "Task A" and t["status"] == "pending"
-    ][0]
+    task_a_pending = [t for t in tasks_to_dump if t["description"] == "Task A" and t["status"] == "pending"][0]
     print(f"  - Task A (pending): {task_a_pending['id'][:8]}")
 
-    task_a_completed = [
-        t
-        for t in tasks_to_dump
-        if t["description"] == "Task A" and t["status"] == "completed"
-    ][0]
+    task_a_completed = [t for t in tasks_to_dump if t["description"] == "Task A" and t["status"] == "completed"][0]
     print(f"  - Task A (completed): {task_a_completed['id'][:8]}")
 
     task_b_pending = [t for t in tasks_to_dump if t["description"] == "Task B"][0]
