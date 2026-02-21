@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "todo-tracker"
-version = "0.1.1"
+version = "0.1.2"
 description = "A CLI-based todo task tracker with versioning and attachments"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -32,6 +32,9 @@ dev = [
     "pytest>=7.0.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/gwr3n/todo-tracker"
+
 [project.scripts]
 todo = "src.cli:main"
 
@@ -41,3 +44,20 @@ include = ["src*"]
 
 [tool.setuptools.package-data]
 src = ["py.typed"]
+
+[tool.black]
+line-length = 127
+target-version = ["py39", "py310", "py311", "py312", "py313"]
+exclude = '''
+/(
+  \.git
+| \.venv
+| venv
+| build
+| dist
+)/
+'''
+
+[tool.pyright]
+include = ["src", "tests"]
+extraPaths = ["."]
