@@ -70,3 +70,12 @@ def test_resolve_alias_with_version():
     result = resolve_alias(f"{a1.lower()}-3", candidates)
     assert result[0] == u1
     assert result[1] == 3
+
+
+def test_resolve_alias_empty_string_returns_none():
+    u1 = UUID("3077bee6-3da3-4783-aff7-cbedfd5f5592")
+    candidates = [u1]
+
+    # Empty input must not raise; there is simply no match.
+    assert resolve_alias("", candidates) is None
+    assert resolve_alias("", []) is None

@@ -117,7 +117,7 @@ def resolve_alias(alias: str, candidates: List[UUID]) -> Optional[tuple]:
 
     # Check for version suffix (e.g., "Misty-Rat-2")
     version_number = None
-    if target[-1].isdigit():
+    if target and target[-1].isdigit():
         # Find the last dash before the number
         parts = target.rsplit("-", 1)
         if len(parts) == 2 and parts[1].isdigit():
